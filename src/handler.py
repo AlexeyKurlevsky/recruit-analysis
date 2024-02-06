@@ -82,6 +82,3 @@ class HuntHandler:
     @property
     def request(self):
         return self.client.request
-
-
-

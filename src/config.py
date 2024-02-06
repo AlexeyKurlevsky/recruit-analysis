@@ -25,6 +25,3 @@ SQLALCHEMY_DB_URI = (f'postgresql+psycopg2://'
 MAX_ITEM_ON_PAGE = 50
 
 engine = create_engine(SQLALCHEMY_DB_URI)
-
-
-

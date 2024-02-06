@@ -48,12 +48,3 @@ def check_new_row(diff, handler, path):
                 raise ValueError('Can\'t getting all vacancies')
             arr_vac += resp['items']
     return arr_vac
-
-
-
-
-
-
-
-
-
