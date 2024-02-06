@@ -9,8 +9,8 @@ Base = declarative_base()
 
 class AllVacancies(Base):
     __tablename__ = 'all_vacancies'
-    id = Column(Integer, primary_key=True, nullable=False)
-    account_division = Column(Integer, nullable=False, comment="Region ID")
+    id = Column(Integer, primary_key=True)
+    account_division = Column(Integer, comment="Region ID")
     account_region = Column(Integer, comment="Region ID")
     position = Column(String(100), nullable=False, comment="The name of the vacancy (occupation)")
     company = Column(String(100), comment="Department (ignored if the DEPARTMENTS are enabled)")
