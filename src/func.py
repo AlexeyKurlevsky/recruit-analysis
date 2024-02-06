@@ -1,23 +1,50 @@
+import asyncio
 import logging
 import json
+import math
 
-from huntflow_api_client import HuntflowAPI
-from huntflow_api_client.tokens import ApiToken
+from typing import Any
+from sqlalchemy.orm import Session
+from sqlalchemy import insert
 
-from src.config import HUNTFLOW_ACCESS_TOKEN, HUNTFLOW_REFRESH_TOKEN
+from src.config import engine, MAX_ITEM_ON_PAGE
+from src.db.tables import AllVacancies
+from src.handler import HuntHandler
 
-hunt_token = ApiToken(access_token=HUNTFLOW_ACCESS_TOKEN,
-                      refresh_token=HUNTFLOW_REFRESH_TOKEN)
-hunt_client = HuntflowAPI(base_url='https://api.huntflow.ru',
-                          token=hunt_token,
-                          auto_refresh_tokens=True)
+session = Session(bind=engine)
 
 
-async def get_me():
-    resp = await hunt_client.request(method='GET', path='me')
-    if resp.status_code != 200:
-        logging.info('Status code from getMe request %s' % resp.status_code)
-        raise ValueError(resp.text)
-    logging.info('Status code from getMe request %s' % resp.status_code)
+def async_request(client: Any, path: str, method: str = "GET", **kwargs):
+    resp = asyncio.run(client.request(path=path, method=method, **kwargs))
     res = json.loads(resp.text)
-    return res
+    return res, resp.status_code
+
+
+def remove_additional_column(elem, columns):
+    for col in columns:
+        try:
+            del elem[col]
+        except Exception as ex:
+            logging.debug('additional column %s is missing' % col)
+            continue
+    return elem
+
+
+def check_new_row(diff, handler, path):
+    arr_vac = []
+    if diff <= MAX_ITEM_ON_PAGE:
+        data = {"count": diff}
+        resp, status = async_request(handler.client, path=path, params=data)
+        if status != 200:
+            raise ValueError('Can\'t getting all vacancies')
+        arr_vac += resp['items']
+    else:
+        count_page = math.ceil(diff / MAX_ITEM_ON_PAGE)
+        for i in range(1, count_page+1):
+            data = {"count": MAX_ITEM_ON_PAGE,
+                    "page": i}
+            resp, status = async_request(handler.client, path=path, params=data)
+            if status != 200:
+                raise ValueError('Can\'t getting all vacancies')
+            arr_vac += resp['items']
+    return arr_vac

@@ -1,2 +1,5 @@
 huntflow-api-client==2.0.1
 python-dotenv==1.0.1
+SQLAlchemy==2.0.25
+numpy==1.26.3
+psycopg2-binary==2.9.9
