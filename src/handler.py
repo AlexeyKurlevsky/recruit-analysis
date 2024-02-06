@@ -19,6 +19,7 @@ class HuntHandler:
         self._org_id = self.org_id
         self._total_vacancy = self.total_vacancy
         self._additional_fields = self.additional_fields
+        self._total_coworkers = self.total_coworkers
 
     @cached_property
     def current_user_id(self):
@@ -66,6 +67,17 @@ class HuntHandler:
         res = json.loads(resp.text)
         self._additional_fields = list(res.keys())
         return self._additional_fields
+
+    @cached_property
+    def total_coworkers(self):
+        path = f'accounts/{self._org_id}/coworkers'
+        resp = asyncio.run(self.client.request(method='GET', path=path))
+        if resp.status_code != 200:
+            logging.info(resp.text)
+            raise ValueError('Status code from get all coworkers request %s' % resp.status_code)
+        res = json.loads(resp.text)
+        self._total_coworkers = res['total_items']
+        return self._total_coworkers
 
     @property
     def request(self):

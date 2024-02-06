@@ -22,7 +22,7 @@ SQLALCHEMY_DB_URI = (f'postgresql+psycopg2://'
                      f'{DATABASE_HUNTFLOW_USERNAME}:{DATABASE_HUNTFLOW_PASSWORD}@'
                      f'{DATABASE_HOST}:{DATABASE_PORT}/{DATABASE_HUNTFLOW}')
 
-MAX_VACANCIES_ON_PAGE = 50
+MAX_ITEM_ON_PAGE = 50
 
 engine = create_engine(SQLALCHEMY_DB_URI)
 

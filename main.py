@@ -1,7 +1,8 @@
 import asyncio
 
-from src.func import insert_new_vacancies
+from src.task import insert_new_vacancies, add_all_coworkers
 
 if __name__ == '__main__':
     insert_new_vacancies()
-    print('Hello')
+    add_all_coworkers()
+

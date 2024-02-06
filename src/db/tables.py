@@ -25,4 +25,12 @@ class AllVacancies(Base):
     account_vacancy_status_group = Column(Integer, comment="Recruitment status group ID")
 
 
+class Coworkers(Base):
+    __tablename__ = 'coworkers'
+    id = Column(Integer, primary_key=True)
+    member = Column(Integer, comment="User ID", nullable=False)
+    name = Column(String(100), comment="Coworker name")
+    type = Column(String(100), comment="Coworker type (role)")
+
+
 Base.metadata.create_all(engine)

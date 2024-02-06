@@ -7,7 +7,7 @@ from typing import Any
 from sqlalchemy.orm import Session
 from sqlalchemy import insert
 
-from src.config import engine, MAX_VACANCIES_ON_PAGE
+from src.config import engine, MAX_ITEM_ON_PAGE
 from src.db.tables import AllVacancies
 from src.handler import HuntHandler
 
@@ -30,43 +30,26 @@ def remove_additional_column(elem, columns):
     return elem
 
 
-def insert_new_vacancies():
-    handler = HuntHandler()
-    rows = session.query(AllVacancies).count()
-    diff = handler.total_vacancy - rows
-
-    if diff <= 0:
-        logging.info('all vacancies added')
-        return None
-
-    path = f'accounts/{handler.org_id}/vacancies'
+def check_new_row(diff, handler, path):
     arr_vac = []
-    if diff <= MAX_VACANCIES_ON_PAGE:
+    if diff <= MAX_ITEM_ON_PAGE:
         data = {"count": diff}
         resp, status = async_request(handler.client, path=path, params=data)
         if status != 200:
             raise ValueError('Can\'t getting all vacancies')
         arr_vac += resp['items']
     else:
-        count_page = math.ceil(diff / MAX_VACANCIES_ON_PAGE)
+        count_page = math.ceil(diff / MAX_ITEM_ON_PAGE)
         for i in range(1, count_page+1):
-            data = {"count": MAX_VACANCIES_ON_PAGE,
+            data = {"count": MAX_ITEM_ON_PAGE,
                     "page": i}
             resp, status = async_request(handler.client, path=path, params=data)
             if status != 200:
                 raise ValueError('Can\'t getting all vacancies')
-
-            # TODO: Добавить динамическое создание столбца
-            resp['items'] = [remove_additional_column(elem, handler.additional_fields) for elem in resp['items']]
             arr_vac += resp['items']
+    return arr_vac
 
-        for row in arr_vac:
-            stmt = insert(AllVacancies).values(**row)
-            with engine.connect() as conn:
-                result = conn.execute(stmt)
-                conn.commit()
 
-    logging.info(f'Get {len(arr_vac)} new vacancies')
 
 
 
