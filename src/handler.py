@@ -1,12 +1,18 @@
 import asyncio
 import json
 import logging
+import math
 
+from sqlalchemy import select, insert
+from datetime import datetime
 from functools import cached_property
 from huntflow_api_client import HuntflowAPI
 from huntflow_api_client.tokens import ApiToken
+from sqlalchemy.orm import Session
 
-from src.config import HUNTFLOW_ACCESS_TOKEN, HUNTFLOW_REFRESH_TOKEN
+from src.config import HUNTFLOW_ACCESS_TOKEN, HUNTFLOW_REFRESH_TOKEN, engine, MAX_ITEM_ON_PAGE
+from src.db.tables import Coworkers, StatusReasons
+from src.func import async_request
 
 
 class HuntHandler:
@@ -25,7 +31,7 @@ class HuntHandler:
     def current_user_id(self):
         resp = asyncio.run(self.client.request(method='GET', path='me'))
         if resp.status_code != 200:
-            logging.info(resp.text)
+            logging.error(resp.text)
             raise ValueError('Status code from getMe request %s' % resp.status_code)
         logging.info('Status code from getMe request %s' % resp.status_code)
         res = json.loads(resp.text)
@@ -36,7 +42,7 @@ class HuntHandler:
     def org_id(self):
         resp = asyncio.run(self.client.request(method='GET', path='accounts'))
         if resp.status_code != 200:
-            logging.info(resp.text)
+            logging.error(resp.text)
             raise ValueError('Status code from accounts request %s' % resp.status_code)
         logging.info('Status code from accounts request %s' % resp.status_code)
         res = json.loads(resp.text)
@@ -50,7 +56,7 @@ class HuntHandler:
         path = f'accounts/{self._org_id}/vacancies'
         resp = asyncio.run(self.client.request(method='GET', path=path))
         if resp.status_code != 200:
-            logging.info(resp.text)
+            logging.error(resp.text)
             raise ValueError('Status code from get all vacancies request %s' % resp.status_code)
         logging.info('Status code from get all vacancies request %s' % resp.status_code)
         res = json.loads(resp.text)
@@ -62,7 +68,7 @@ class HuntHandler:
         path = f'accounts/{self._org_id}/vacancies/additional_fields'
         resp = asyncio.run(self.client.request(method='GET', path=path))
         if resp.status_code != 200:
-            logging.info(resp.text)
+            logging.error(resp.text)
             raise ValueError('Status code from get additional fields request %s' % resp.status_code)
         res = json.loads(resp.text)
         self._additional_fields = list(res.keys())
@@ -73,7 +79,7 @@ class HuntHandler:
         path = f'accounts/{self._org_id}/coworkers'
         resp = asyncio.run(self.client.request(method='GET', path=path))
         if resp.status_code != 200:
-            logging.info(resp.text)
+            logging.error(resp.text)
             raise ValueError('Status code from get all coworkers request %s' % resp.status_code)
         res = json.loads(resp.text)
         self._total_coworkers = res['total_items']
@@ -82,3 +88,84 @@ class HuntHandler:
     @property
     def request(self):
         return self.client.request
+
+    def update_coworkers(self, coworker_info: dict):
+        path = f'accounts/{self._org_id}/users/{coworker_info["id"]}'
+        try:
+            resp = asyncio.run(self.client.request(method='GET', path=path))
+            # TODO: не работает!!!
+        except Exception as ex:
+            resp = {'status_code': ex.code,
+                    'text': ex.errors[0].title}
+        if resp.status_code != 200:
+            logging.error(resp.text)
+            res = {'id': coworker_info['id'],
+                   'name': coworker_info['name'],
+                   'type': 'unknown'}
+        else:
+            res = json.loads(resp.text)
+        try:
+            stmt = insert(Coworkers).values(id=res['id'],
+                                            name=res['name'],
+                                            type=res['type'])
+            with engine.connect() as conn:
+                result = conn.execute(stmt)
+                conn.commit()
+        except Exception as ex:
+            logging.error(ex)
+
+    def update_status_reasons(self, status_id: tuple):
+        path_dict = {'hold': f'/accounts/{self._org_id}/vacancy_hold_reasons',
+                     'close': f'/accounts/{self._org_id}/vacancy_close_reasons'}
+        path = path_dict[status_id[0]]
+
+        resp = asyncio.run(self.client.request(method='GET', path=path))
+        logging.debug('Status code get reasons %s' % resp.status_code)
+        if resp.status_code != 200:
+            logging.error(resp.text)
+            raise ValueError('Status code from get status %s' % resp.status_code)
+        res = json.loads(resp.text)
+        getting_status = {elem['id']: elem['name'] for elem in res['items']}
+        name = getting_status[status_id[1]]
+        try:
+            stmt = insert(StatusReasons).values(id=status_id[1],
+                                                name=name)
+            with engine.connect() as conn:
+                result = conn.execute(stmt)
+                conn.commit()
+        except Exception as ex:
+            logging.error(ex)
+
+    def get_all_vacancies(self):
+        path = f'accounts/{self._org_id}/vacancies'
+        count_page = math.ceil(self._total_vacancy / MAX_ITEM_ON_PAGE)
+        arr_vac = []
+        for i in range(1, count_page + 1):
+            data = {"count": MAX_ITEM_ON_PAGE,
+                    "page": i}
+            resp, status = async_request(self.client, path=path, params=data)
+            if status != 200:
+                raise ValueError('Can\'t getting all vacancies')
+            arr_vac += resp['items']
+        return arr_vac
+
+    def get_log_vacancy(self, vacancy_id, date_begin):
+        path = f'/accounts/{self._org_id}/vacancies/{vacancy_id}/logs'
+        date_now = datetime.now().strftime('%Y-%m-%dT%H:%M:%S+03:00')
+        params = {'date_begin': date_begin,
+                  'date_end': date_now}
+
+        resp = asyncio.run(self.client.request(method='GET', path=path, params=params))
+        logging.debug('response code from log vacancy %s' % resp.status_code)
+
+        if resp.status_code != 200:
+            logging.error(resp.text)
+            return None
+        res = json.loads(resp.text)
+
+        if res['items']:
+            log = res['items'][0]
+        else:
+            log = None
+
+        return log
