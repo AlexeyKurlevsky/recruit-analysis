@@ -93,17 +93,12 @@ class HuntHandler:
         path = f'accounts/{self._org_id}/users/{coworker_info["id"]}'
         try:
             resp = asyncio.run(self.client.request(method='GET', path=path))
-            # TODO: не работает!!!
+            res = json.loads(resp.text)
         except Exception as ex:
-            resp = {'status_code': ex.code,
-                    'text': ex.errors[0].title}
-        if resp.status_code != 200:
-            logging.error(resp.text)
+            logging.error(ex.errors[0].title)
             res = {'id': coworker_info['id'],
                    'name': coworker_info['name'],
                    'type': 'unknown'}
-        else:
-            res = json.loads(resp.text)
         try:
             stmt = insert(Coworkers).values(id=res['id'],
                                             name=res['name'],
@@ -169,3 +164,17 @@ class HuntHandler:
             log = None
 
         return log
+
+    def check_reason_close(self, vacancy_id):
+        path = f'/accounts/{self._org_id}/vacancies/{vacancy_id}/frame'
+        flg = False
+        try:
+            resp = asyncio.run(self.client.request(method='GET', path=path))
+            res = json.loads(resp.text)
+            if res['hired_applicants']:
+                flg = True
+        except Exception as ex:
+            logging.error(ex)
+
+        return flg
+

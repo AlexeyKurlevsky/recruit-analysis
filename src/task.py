@@ -27,7 +27,6 @@ def prepare_new_vacancies(arr_vac):
     handler = HuntHandler()
     # TODO: Добавить динамическое создание столбца
     arr_coworkers_id = get_all_coworkers_id()
-    arr_status_id = get_all_status_vacancy()
     for row in arr_vac:
         row = remove_additional_column(row, handler.additional_fields)
         log_info = handler.get_log_vacancy(row['id'], row['created'])
@@ -38,23 +37,33 @@ def prepare_new_vacancies(arr_vac):
                 handler.update_coworkers(coworker_info)
                 arr_coworkers_id.append(coworker_info['id'])
             row['coworkers_id'] = coworker_info['id']
-            if log_info['account_vacancy_hold_reason']:
-                row['reason_id'] = log_info['account_vacancy_hold_reason']
-                if log_info['account_vacancy_hold_reason'] not in arr_status_id:
-                    status = ('hold', log_info['account_vacancy_hold_reason'])
-                    handler.update_status_reasons(status)
-                    arr_status_id.append(log_info['account_vacancy_hold_reason'])
-            elif log_info['account_vacancy_close_reason']:
-                row['reason_id'] = log_info['account_vacancy_close_reason']
-                if log_info['account_vacancy_close_reason'] not in arr_status_id:
-                    status = ('close', log_info['account_vacancy_close_reason'])
-                    handler.update_status_reasons(status)
-                    arr_status_id.append(log_info['account_vacancy_close_reason'])
+            # Если понадобятся статусы
+            # if log_info['account_vacancy_hold_reason']:
+            #     row['reason_id'] = log_info['account_vacancy_hold_reason']
+            #     if log_info['account_vacancy_hold_reason'] not in arr_status_id:
+            #         status = ('hold', log_info['account_vacancy_hold_reason'])
+            #         handler.update_status_reasons(status)
+            #         arr_status_id.append(log_info['account_vacancy_hold_reason'])
+            # elif log_info['account_vacancy_close_reason']:
+            #     row['reason_id'] = log_info['account_vacancy_close_reason']
+            #     if log_info['account_vacancy_close_reason'] not in arr_status_id:
+            #         status = ('close', log_info['account_vacancy_close_reason'])
+            #         handler.update_status_reasons(status)
+            #         arr_status_id.append(log_info['account_vacancy_close_reason'])
+            # else:
+            #     row['reason_id'] = None
+
+            if row['state'] == 'CLOSED':
+                row['date_closed'] = log_info['created']
+                row['flg_close_recruiter'] = handler.check_reason_close(row['id'])
             else:
-                row['reason_id'] = None
+                row['flg_close_recruiter'] = False
+
         else:
             row['coworkers_id'] = None
             row['reason_id'] = None
+            row['date_closed'] = None
+            row['flg_close_recruiter'] = False
 
         try:
             stmt = insert(AllVacancies).values(**row)

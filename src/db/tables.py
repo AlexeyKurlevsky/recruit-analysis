@@ -23,8 +23,11 @@ class AllVacancies(Base):
     multiple = Column(Boolean, comment="Flag indicating if this vacancy is a multiple")
     parent = Column(Boolean, comment="Flag indicating if this vacancy is a multiple")
     account_vacancy_status_group = Column(Integer, comment="Recruitment status group ID")
-    reason_id = Column(Integer, ForeignKey("status_reasons.id"), comment="id reason")
+    flg_close_recruiter = Column(Boolean, comment="True if the vacancy was filled by a recruit")
     coworkers_id = Column(Integer, ForeignKey("coworkers.id"), comment="id reason")
+    date_closed = Column(DateTime(), comment="date closed vacancy")
+
+# /accounts/{account_id}/vacancies/{vacancy_id}/frame для нанятых вакансий
 
 
 class Coworkers(Base):
