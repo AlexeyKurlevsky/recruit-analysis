@@ -1,10 +1,10 @@
 import logging
 
 from functools import cached_property
-from bs4 import BeautifulSoup
 
 from selenium import webdriver
 from selenium.common import NoSuchElementException
+from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as ec
@@ -12,6 +12,7 @@ from selenium.webdriver.support import expected_conditions as ec
 # TODO: убрать в проде HUNTFLOW_REFRESH_TOKEN_DEV
 from src.config import HUNTFLOW_USERNAME, HUNTFLOW_PASSWORD, HUNTFLOW_REFRESH_TOKEN_DEV
 from src.handler.handler import HuntHandler
+from src.parser.func import get_info_vacancy
 
 
 class HuntFlowParser:
@@ -57,20 +58,15 @@ class HuntFlowParser:
 
     def get_vacancy_page(self, vac_id: int):
         self._driver.get(f'{self.url_parse}/my/{self._org_nick}/view/vacancy/{vac_id}')
-
-        WebDriverWait(driver= self._driver, timeout=30).until(
-            ec.presence_of_element_located((By.CLASS_NAME, 'page-title'))
-        )
-
         try:
-            self._driver.find_element(By.CLASS_NAME, 'error-block__title')
-            logging.error('Not found of %s vacancy page' % vac_id)
+            WebDriverWait(driver=self._driver, timeout=10).until(
+                ec.presence_of_element_located((By.CLASS_NAME, 'root--z7B1B'))
+            )
+        except TimeoutException:
+            logging.error('vacancy %s not found or page don\'t loading' % vac_id)
             return None
-        except NoSuchElementException:
-            logging.info('Get page of %s vacancy' % vac_id)
 
         status_elem = self._driver.find_element(By.CLASS_NAME, 'root--z7B1B')
-        html_elem = status_elem.get_attribute('innerHTML')
-        print(html_elem)
-
+        html_text = status_elem.get_attribute('innerHTML')
+        vac_info = get_info_vacancy(html_text)
 
