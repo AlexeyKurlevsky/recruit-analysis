@@ -3,16 +3,15 @@ import json
 import logging
 import math
 
-from sqlalchemy import select, insert
+from sqlalchemy import insert
 from datetime import datetime
 from functools import cached_property
 from huntflow_api_client import HuntflowAPI
 from huntflow_api_client.tokens import ApiToken
-from sqlalchemy.orm import Session
 
 from src.config import HUNTFLOW_ACCESS_TOKEN, HUNTFLOW_REFRESH_TOKEN, engine, MAX_ITEM_ON_PAGE
 from src.db.tables import Coworkers, StatusReasons
-from src.func import async_request
+from src.handler.func import async_request
 
 
 class HuntHandler:

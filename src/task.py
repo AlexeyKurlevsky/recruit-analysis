@@ -1,13 +1,12 @@
 import logging
 
-from sqlalchemy.orm import Session
-from sqlalchemy import insert, select
+from sqlalchemy import insert
 
 from src.config import engine
-from src.db.queries import get_all_coworkers_id, get_all_status_vacancy, get_all_vacancies_id
-from src.db.tables import AllVacancies, Coworkers
-from src.func import remove_additional_column
-from src.handler import HuntHandler
+from src.db.queries import get_all_coworkers_id, get_all_vacancies_id
+from src.db.tables import AllVacancies
+from src.handler.func import remove_additional_column
+from src.handler.handler import HuntHandler
 
 
 def get_new_vacancies():
