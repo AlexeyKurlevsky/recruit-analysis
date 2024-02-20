@@ -15,13 +15,14 @@ from src.handler.func import async_request
 
 
 class HuntHandler:
-    def __init__(self, url: str = "https://api.huntflow.ru"):
-        self.__token = ApiToken(access_token=HUNTFLOW_ACCESS_TOKEN,
+    def __init__(self, url: str = "https://api.huntflow.ru",
+                 access_token: str = HUNTFLOW_ACCESS_TOKEN):
+        self.__token = ApiToken(access_token=access_token,
                                 refresh_token=HUNTFLOW_REFRESH_TOKEN)
         self.client = HuntflowAPI(base_url=url, token=self.__token,
                                   auto_refresh_tokens=True)
         self._current_user_id = self.current_user_id
-        self._org_id = self.org_id
+        self._org_id, self._org_nick = self.org_id
         self._total_vacancy = self.total_vacancy
         self._additional_fields = self.additional_fields
         self._total_coworkers = self.total_coworkers
@@ -48,7 +49,8 @@ class HuntHandler:
         if not res.get('items') and not res['items']:
             raise ValueError('Response don\'t have items key')
         self._org_id = res['items'][0]['id']
-        return self._org_id
+        self._org_nick = res['items'][0]['nick']
+        return self._org_id, self._org_nick
 
     @property
     def total_vacancy(self):
