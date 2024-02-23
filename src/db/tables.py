@@ -1,6 +1,8 @@
 from sqlalchemy import create_engine, MetaData, Table, Integer, String, \
     Column, DateTime, ForeignKey, Numeric, Boolean, ARRAY
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import relationship
+from datetime import datetime
 
 from src.config import engine
 
@@ -27,8 +29,6 @@ class AllVacancies(Base):
     coworkers_id = Column(Integer, ForeignKey("coworkers.id"), comment="id reason")
     date_closed = Column(DateTime(), comment="date closed vacancy")
 
-# /accounts/{account_id}/vacancies/{vacancy_id}/frame для нанятых вакансий
-
 
 class Coworkers(Base):
     __tablename__ = 'coworkers'
@@ -43,6 +43,23 @@ class StatusReasons(Base):
     __tablename__ = 'status_reasons'
     id = Column(Integer, primary_key=True)
     name = Column(String(100), comment="Reason name")
+
+
+class ApplicantsStatus(Base):
+    __tablename__ = 'applicants_status'
+    id = Column(String, primary_key=True)
+    name = Column(String, comment='name of status')
+
+
+class VacStatInfo(Base):
+    __tablename__ = 'vacancy_stat_info'
+    id = Column(Integer, primary_key=True)
+    vac_id = Column(Integer, comment='Vacancy id', nullable=False)
+    # all_vac = relationship('all_vacancies', backref='vacancy_stat_info', uselist=False)
+    status_id = Column(String, nullable=False, comment='Applicant status id')
+    # applicant_status = relationship('applicants_status', backref='vacancy_stat_info', uselist=False)
+    value = Column(Integer, comment='value of applicants by status')
+    date = Column(DateTime(), default=datetime.now(), comment='Date when registrate status')
 
 
 Base.metadata.create_all(engine)

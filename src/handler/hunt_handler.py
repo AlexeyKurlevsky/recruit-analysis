@@ -3,26 +3,28 @@ import json
 import logging
 import math
 
-from sqlalchemy import select, insert
+from sqlalchemy import insert
 from datetime import datetime
 from functools import cached_property
 from huntflow_api_client import HuntflowAPI
 from huntflow_api_client.tokens import ApiToken
-from sqlalchemy.orm import Session
 
 from src.config import HUNTFLOW_ACCESS_TOKEN, HUNTFLOW_REFRESH_TOKEN, engine, MAX_ITEM_ON_PAGE
 from src.db.tables import Coworkers, StatusReasons
-from src.func import async_request
+from src.handler.func import async_request
+from src.handler.hunt_token_proxy import HuntTokenProxy
 
 
 class HuntHandler:
-    def __init__(self, url: str = "https://api.huntflow.ru"):
-        self.__token = ApiToken(access_token=HUNTFLOW_ACCESS_TOKEN,
+    def __init__(self, url: str = "https://api.huntflow.ru",
+                 access_token: str = HUNTFLOW_ACCESS_TOKEN):
+        self.__token = ApiToken(access_token=access_token,
                                 refresh_token=HUNTFLOW_REFRESH_TOKEN)
-        self.client = HuntflowAPI(base_url=url, token=self.__token,
+        self.__token_proxy = HuntTokenProxy(token=self.__token)
+        self.client = HuntflowAPI(base_url=url, token_proxy=self.__token_proxy,
                                   auto_refresh_tokens=True)
         self._current_user_id = self.current_user_id
-        self._org_id = self.org_id
+        self._org_id, self._org_nick = self.org_id
         self._total_vacancy = self.total_vacancy
         self._additional_fields = self.additional_fields
         self._total_coworkers = self.total_coworkers
@@ -49,7 +51,8 @@ class HuntHandler:
         if not res.get('items') and not res['items']:
             raise ValueError('Response don\'t have items key')
         self._org_id = res['items'][0]['id']
-        return self._org_id
+        self._org_nick = res['items'][0]['nick']
+        return self._org_id, self._org_nick
 
     @property
     def total_vacancy(self):
