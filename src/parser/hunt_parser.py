@@ -1,4 +1,6 @@
 import logging
+import requests
+import json
 
 from functools import cached_property
 
@@ -10,8 +12,8 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as ec
 
 # TODO: убрать в проде HUNTFLOW_REFRESH_TOKEN_DEV
-from src.config import HUNTFLOW_USERNAME, HUNTFLOW_PASSWORD, HUNTFLOW_REFRESH_TOKEN_DEV
-from src.handler.handler import HuntHandler
+from src.config import HUNTFLOW_USERNAME, HUNTFLOW_PASSWORD, HUNTFLOW_REFRESH_TOKEN_DEV, HUNTFLOW_ACCESS_TOKEN
+from src.handler.hunt_handler import HuntHandler
 from src.parser.func import get_info_vacancy
 
 
@@ -52,21 +54,33 @@ class HuntFlowParser:
 
     @cached_property
     def get_org_nick(self):
-        handler = HuntHandler(self.url_api, access_token=HUNTFLOW_REFRESH_TOKEN_DEV)
+        handler = HuntHandler(self.url_api, access_token=HUNTFLOW_ACCESS_TOKEN)
         self._org_nick = handler.org_id[1]
         return self._org_nick
 
-    def get_vacancy_page(self, vac_id: int):
-        self._driver.get(f'{self.url_parse}/my/{self._org_nick}/view/vacancy/{vac_id}')
-        try:
-            WebDriverWait(driver=self._driver, timeout=10).until(
-                ec.presence_of_element_located((By.CLASS_NAME, 'root--z7B1B'))
-            )
-        except TimeoutException:
-            logging.error('vacancy %s not found or page don\'t loading' % vac_id)
+    def get_vacancy_stat_info(self, vac_id: int):
+        # Парсинг html страницы
+        # self._driver.get(f'{self.url_parse}/my/{self._org_nick}/view/vacancy/{vac_id}')
+        # try:
+        #     WebDriverWait(driver=self._driver, timeout=10).until(
+        #         ec.presence_of_element_located((By.CLASS_NAME, 'root--z7B1B'))
+        #     )
+        # except TimeoutException:
+        #     logging.error('vacancy %s not found or page don\'t loading' % vac_id)
+        #     return None
+        # status_elem = self._driver.find_element(By.CLASS_NAME, 'root--z7B1B')
+        # html_text = status_elem.get_attribute('innerHTML')
+        # vac_info = get_info_vacancy(html_text)
+
+        cook_drive = self._driver.get_cookies()
+        cookies_dict = {}
+        for cookie in cook_drive:
+            cookies_dict[cookie['name']] = cookie['value']
+
+        resp = requests.get(f'{self.url_parse}/my/{self._org_nick}/vacancy/{vac_id}/stats', cookies=cookies_dict)
+        if resp.status_code != 200:
+            logging.error('Not stat information about %s vacancy' % vac_id)
             return None
 
-        status_elem = self._driver.find_element(By.CLASS_NAME, 'root--z7B1B')
-        html_text = status_elem.get_attribute('innerHTML')
-        vac_info = get_info_vacancy(html_text)
-
+        info = json.loads(resp.content)
+        return info

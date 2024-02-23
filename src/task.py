@@ -3,10 +3,11 @@ import logging
 from sqlalchemy import insert
 
 from src.config import engine
-from src.db.queries import get_all_coworkers_id, get_all_vacancies_id
-from src.db.tables import AllVacancies
+from src.db.queries import get_all_coworkers_id, get_all_vacancies_id, get_open_vacancy_id, get_all_status_applicant
+from src.db.tables import AllVacancies, ApplicantsStatus, VacStatInfo
 from src.handler.func import remove_additional_column
-from src.handler.handler import HuntHandler
+from src.handler.hunt_handler import HuntHandler
+from src.parser.hunt_parser import HuntFlowParser
 
 
 def get_new_vacancies():
@@ -74,3 +75,30 @@ def prepare_new_vacancies(arr_vac):
             continue
 
     logging.info(f'Get {len(arr_vac)} new vacancies')
+
+
+def insert_applicant_status():
+    parse = HuntFlowParser(url_parse='https://huntflow.ru',
+                           url_api='https://api.huntflow.ru')
+    all_status_id = get_all_status_applicant()
+    open_vac_id = get_open_vacancy_id()
+    for vac_id in open_vac_id:
+        applicant_status_info = parse.get_vacancy_stat_info(vac_id)
+
+        if applicant_status_info is None:
+            continue
+        items = applicant_status_info.get('items')
+        for status_id in items:
+            if status_id not in all_status_id:
+                stmt = insert(ApplicantsStatus).values(id=status_id, name=None)
+                with engine.connect() as conn:
+                    result = conn.execute(stmt)
+                    conn.commit()
+                all_status_id.append(status_id)
+            stmt = insert(VacStatInfo).values(vac_id=vac_id,
+                                              status_id=status_id,
+                                              value=items[status_id])
+            with engine.connect() as conn:
+                result = conn.execute(stmt)
+                conn.commit()
+        logging.info('Add stat info of %s vacancy' % vac_id)

@@ -1,5 +1,6 @@
 import os
 import logging
+import json
 
 from dotenv import load_dotenv
 from sqlalchemy import create_engine
@@ -28,5 +29,9 @@ SQLALCHEMY_DB_URI = (f'postgresql+psycopg2://'
                      f'{DATABASE_HOST}:{DATABASE_PORT}/{DATABASE_HUNTFLOW}')
 
 MAX_ITEM_ON_PAGE = 50
+
+f = open('./config/applicant_statuses.json')
+applicant_statuses = json.load(f)
+APPLICANT_STATUSES = {elem['id']: elem['name'] for elem in applicant_statuses}
 
 engine = create_engine(SQLALCHEMY_DB_URI)
