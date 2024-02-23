@@ -84,3 +84,13 @@ class HuntFlowParser:
 
         info = json.loads(resp.content)
         return info
+
+    def logout(self):
+        digital_hr_button = self._driver.find_element(By.CLASS_NAME, 'title--b57Ew')
+        digital_hr_button.click()
+        WebDriverWait(driver=self._driver, timeout=10).until(
+            ec.presence_of_element_located((By.XPATH, '//a[@href="/account/logout"]'))
+        )
+        logout_button = self._driver.find_element(By.XPATH, '//a[@href="/account/logout"]')
+        logout_button.click()
+        logging.info('Logout from HuntFLow. Goodbye!!!')

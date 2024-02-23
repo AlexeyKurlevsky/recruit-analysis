@@ -12,6 +12,7 @@ from huntflow_api_client.tokens import ApiToken
 from src.config import HUNTFLOW_ACCESS_TOKEN, HUNTFLOW_REFRESH_TOKEN, engine, MAX_ITEM_ON_PAGE
 from src.db.tables import Coworkers, StatusReasons
 from src.handler.func import async_request
+from src.handler.hunt_token_proxy import HuntTokenProxy
 
 
 class HuntHandler:
@@ -19,7 +20,8 @@ class HuntHandler:
                  access_token: str = HUNTFLOW_ACCESS_TOKEN):
         self.__token = ApiToken(access_token=access_token,
                                 refresh_token=HUNTFLOW_REFRESH_TOKEN)
-        self.client = HuntflowAPI(base_url=url, token=self.__token,
+        self.__token_proxy = HuntTokenProxy(token=self.__token)
+        self.client = HuntflowAPI(base_url=url, token_proxy=self.__token_proxy,
                                   auto_refresh_tokens=True)
         self._current_user_id = self.current_user_id
         self._org_id, self._org_nick = self.org_id
