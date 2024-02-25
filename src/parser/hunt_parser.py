@@ -11,8 +11,7 @@ from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as ec
 
-# TODO: убрать в проде HUNTFLOW_REFRESH_TOKEN_DEV
-from src.config import HUNTFLOW_USERNAME, HUNTFLOW_PASSWORD, HUNTFLOW_REFRESH_TOKEN_DEV, HUNTFLOW_ACCESS_TOKEN
+from src.config import HUNTFLOW_USERNAME, HUNTFLOW_PASSWORD, HUNTFLOW_ACCESS_TOKEN
 from src.handler.hunt_handler import HuntHandler
 from src.parser.func import get_info_vacancy
 

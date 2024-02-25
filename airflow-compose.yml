@@ -50,11 +50,12 @@ x-airflow-common:
   # Comment the image line, place your Dockerfile in the directory where you placed the docker-compose.yaml
   # and uncomment the "build" line below, Then run `docker-compose build` to build the images.
   build: .
+  env_file: .env
   environment:
     &airflow-common-env
     AIRFLOW__CORE__EXECUTOR: CeleryExecutor
-    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${AIRFLOW_USERNAME}:${AIRFLOW_PASSWORD}@{AIRFLOW_DB_HOST/airflow
-    AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://airflow:airflow@postgres/airflow
+    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${AIRFLOW_USERNAME}:${AIRFLOW_PASSWORD}@${AIRFLOW_DB_HOST}/airflow
+    AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://${AIRFLOW_USERNAME}:${AIRFLOW_PASSWORD}@${AIRFLOW_DB_HOST}/airflow
     AIRFLOW__CELERY__BROKER_URL: redis://:@redis:6379/0
     AIRFLOW__CORE__FERNET_KEY: ''
     AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
@@ -74,11 +75,10 @@ x-airflow-common:
 #    - ${AIRFLOW_PROJ_DIR:-.}/config:/opt/airflow/config
 #    - ${AIRFLOW_PROJ_DIR:-.}/plugins:/opt/airflow/plugins
   user: "${AIRFLOW_UID:-50000}:0"
-  depends_on:
-    &airflow-common-depends-on
+#  depends_on:
+#    &airflow-common-depends-on
 
 services:
-
   airflow-webserver:
     <<: *airflow-common
     command: webserver
@@ -92,7 +92,7 @@ services:
       start_period: 30s
     restart: always
     depends_on:
-      <<: *airflow-common-depends-on
+#      <<: *airflow-common-depends-on
       airflow-init:
         condition: service_completed_successfully
     networks:
@@ -109,7 +109,7 @@ services:
       start_period: 30s
     restart: always
     depends_on:
-      <<: *airflow-common-depends-on
+#      <<: *airflow-common-depends-on
       airflow-init:
         condition: service_completed_successfully
     networks:
@@ -134,7 +134,7 @@ services:
       DUMB_INIT_SETSID: "0"
     restart: always
     depends_on:
-      <<: *airflow-common-depends-on
+#      <<: *airflow-common-depends-on
       airflow-init:
         condition: service_completed_successfully
     networks:
@@ -151,7 +151,7 @@ services:
       start_period: 30s
     restart: always
     depends_on:
-      <<: *airflow-common-depends-on
+#      <<: *airflow-common-depends-on
       airflow-init:
         condition: service_completed_successfully
     networks:
@@ -256,7 +256,7 @@ services:
       start_period: 30s
     restart: always
     depends_on:
-      <<: *airflow-common-depends-on
+#      <<: *airflow-common-depends-on
       airflow-init:
         condition: service_completed_successfully
     networks:
