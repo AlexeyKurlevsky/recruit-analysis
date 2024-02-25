@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-x-superset-image: &superset-image apachesuperset.docker.scarf.sh/apache/superset:3.1.0
+x-superset-image: &superset-image apache/superset:3.1.0
 x-superset-depends-on: &superset-depends-on
 #  - db
   - redis
@@ -32,7 +32,7 @@ services:
     volumes:
       - redis:/data
 
-#  db:
+  #  db:
 #    env_file: docker/.env-non-dev
 #    image: postgres:15
 #    container_name: superset_db
@@ -42,7 +42,7 @@ services:
 #      - ./docker/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
 
   superset:
-    env_file: docker/.env-non-dev
+    env_file: .env
     image: *superset-image
     container_name: superset_app
     command: ["/app/docker/docker-bootstrap.sh", "app-gunicorn"]
@@ -53,26 +53,28 @@ services:
     depends_on: *superset-depends-on
     volumes: *superset-volumes
     extra_hosts:
-      - "db:172.17.0.1"
+      - "db:host-gateway"
+
 
   superset-init:
     image: *superset-image
     container_name: superset_init
     command: ["/app/docker/docker-init.sh"]
-    env_file: docker/.env-non-dev
+    env_file: .env
     depends_on: *superset-depends-on
     user: "root"
     volumes: *superset-volumes
     healthcheck:
       disable: true
     extra_hosts:
-      - "db:172.17.0.1"
+      - "db:host-gateway"
+
 
   superset-worker:
     image: *superset-image
     container_name: superset_worker
     command: ["/app/docker/docker-bootstrap.sh", "worker"]
-    env_file: docker/.env-non-dev
+    env_file: .env
     restart: unless-stopped
     depends_on: *superset-depends-on
     user: "root"
@@ -84,13 +86,13 @@ services:
           "celery -A superset.tasks.celery_app:app inspect ping -d celery@$$HOSTNAME",
         ]
     extra_hosts:
-      - "db:172.17.0.1"
+      - "db:host-gateway"
 
   superset-worker-beat:
     image: *superset-image
     container_name: superset_worker_beat
     command: ["/app/docker/docker-bootstrap.sh", "beat"]
-    env_file: docker/.env-non-dev
+    env_file: .env
     restart: unless-stopped
     depends_on: *superset-depends-on
     user: "root"
@@ -98,7 +100,7 @@ services:
     healthcheck:
       disable: true
     extra_hosts:
-      - "db:172.17.0.1"
+      - "db:host-gateway"
 
 volumes:
   superset_home:
@@ -107,11 +109,3 @@ volumes:
 #    external: false
   redis:
     external: false
-
-networks:
-  my_networks:
-    driver: bridge
-    ipam:
-     config:
-       - subnet: 172.17.0.0/32
-         gateway: 172.17.0.1
