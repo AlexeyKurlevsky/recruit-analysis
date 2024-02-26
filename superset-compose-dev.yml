@@ -15,15 +15,32 @@
 # limitations under the License.
 #
 x-superset-image: &superset-image apache/superset:3.1.0
-#x-superset-depends-on: &superset-depends-on
+x-superset-depends-on: &superset-depends-on
+#  - db
+  - redis
 x-superset-volumes:
   &superset-volumes # /app/pythonpath_docker will be appended to the PYTHONPATH in the final container
   - ./docker:/app/docker
-  - ./docker/pythonpath_dev/schemas.py:/app/superset/databases/schemas.py
   - superset_home:/app/superset_home
 
 version: "3.7"
 services:
+  redis:
+    image: redis:7
+    container_name: superset_cache
+    restart: unless-stopped
+    volumes:
+      - redis:/data
+
+  #  db:
+#    env_file: docker/.env-non-dev
+#    image: postgres:15
+#    container_name: superset_db
+#    restart: unless-stopped
+#    volumes:
+#      - db_home:/var/lib/postgresql/data
+#      - ./docker/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
+
   superset:
     env_file: .env
     image: *superset-image
@@ -33,23 +50,25 @@ services:
     restart: unless-stopped
     ports:
       - 8088:8088
-#    depends_on: *superset-depends-on
+    depends_on: *superset-depends-on
     volumes: *superset-volumes
-    networks:
-      - my_network
+    extra_hosts:
+      - "db:host-gateway"
+
 
   superset-init:
     image: *superset-image
     container_name: superset_init
     command: ["/app/docker/docker-init.sh"]
     env_file: .env
-#    depends_on: *superset-depends-on
+    depends_on: *superset-depends-on
     user: "root"
     volumes: *superset-volumes
     healthcheck:
       disable: true
-    networks:
-      - my_network
+    extra_hosts:
+      - "db:host-gateway"
+
 
   superset-worker:
     image: *superset-image
@@ -57,7 +76,7 @@ services:
     command: ["/app/docker/docker-bootstrap.sh", "worker"]
     env_file: .env
     restart: unless-stopped
-#    depends_on: *superset-depends-on
+    depends_on: *superset-depends-on
     user: "root"
     volumes: *superset-volumes
     healthcheck:
@@ -66,8 +85,8 @@ services:
           "CMD-SHELL",
           "celery -A superset.tasks.celery_app:app inspect ping -d celery@$$HOSTNAME",
         ]
-    networks:
-      - my_network
+    extra_hosts:
+      - "db:host-gateway"
 
   superset-worker-beat:
     image: *superset-image
@@ -75,18 +94,18 @@ services:
     command: ["/app/docker/docker-bootstrap.sh", "beat"]
     env_file: .env
     restart: unless-stopped
-#    depends_on: *superset-depends-on
+    depends_on: *superset-depends-on
     user: "root"
     volumes: *superset-volumes
     healthcheck:
       disable: true
-    networks:
-      - my_network
+    extra_hosts:
+      - "db:host-gateway"
 
 volumes:
   superset_home:
     external: false
-
-networks:
-  my_network:
-    driver: bridge
+#  db_home:
+#    external: false
+  redis:
+    external: false
