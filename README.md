@@ -16,3 +16,8 @@ host 	huntflow_db 	superset 	192.168.0.0/16 		scram-sha-256
 ```commandline
 sudo servcie postgresql restart
 ```
+
+Генерация AIRFLOW_SECRET_KEY
+```commandline
+openssl rand -base64 32
+```

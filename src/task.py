@@ -1,6 +1,12 @@
 import logging
+import pandas as pd
+import os
 
+from airflow.settings import DAGS_FOLDER
+from airflow.models import TaskInstance
+from datetime import datetime
 from sqlalchemy import insert
+from typing import List, Optional
 
 from src.config import engine
 from src.db.queries import get_all_coworkers_id, get_all_vacancies_id, get_open_vacancy_id, get_all_status_applicant
@@ -10,20 +16,39 @@ from src.handler.hunt_handler import HuntHandler
 from src.parser.hunt_parser import HuntFlowParser
 
 
-def get_new_vacancies():
+def get_new_vacancies(ti: TaskInstance, **kwargs) -> Optional[str]:
     handler = HuntHandler()
     new_vac = []
     arr_id_vacancies = get_all_vacancies_id()
-
     arr_vac = handler.get_all_vacancies()
     for vac in arr_vac:
         if vac['id'] not in arr_id_vacancies:
             new_vac.append(vac)
+    if new_vac:
+        now = datetime.now()
+        save_path = f'{DAGS_FOLDER}/new_vacancies_tmp_{now.isoformat()}.csv'
+        df = pd.DataFrame(new_vac)
+        logging.info(f'Save file {save_path} with {df.shape[0]} rows')
+        df.to_csv(save_path, index=False)
+        ti.xcom_push(key='save_path', value=save_path)
+        return 'insert_new_vacancies'
+    else:
+        return None
 
-    return new_vac
+
+def add_new_vacancies(ti: TaskInstance, **kwargs):
+    save_path = ti.xcom_pull(key='save_path')
+    logging.info(f'Get save file path {save_path}')
+    # TODO: сделать временную таблицу в БД
+    df = pd.read_csv(save_path, keep_default_na=False)
+    arr = df.to_dict('records')
+    prepare_new_vacancies(arr)
+    if os.path.exists(save_path):
+        os.remove(save_path)
+        logging.info(f"The file {save_path} has been deleted.")
 
 
-def prepare_new_vacancies(arr_vac):
+def prepare_new_vacancies(arr_vac: list):
     handler = HuntHandler()
     # TODO: Добавить динамическое создание столбца
     arr_coworkers_id = get_all_coworkers_id()
@@ -69,7 +94,6 @@ def prepare_new_vacancies(arr_vac):
             stmt = insert(AllVacancies).values(**row)
             with engine.connect() as conn:
                 result = conn.execute(stmt)
-                conn.commit()
         except Exception as ex:
             logging.error(ex)
             continue
@@ -94,14 +118,12 @@ def insert_applicant_status():
                     stmt = insert(ApplicantsStatus).values(id=status_id, name=None)
                     with engine.connect() as conn:
                         result = conn.execute(stmt)
-                        conn.commit()
                     all_status_id.append(status_id)
                 stmt = insert(VacStatInfo).values(vac_id=vac_id,
                                                   status_id=status_id,
                                                   value=items[status_id])
                 with engine.connect() as conn:
                     result = conn.execute(stmt)
-                    conn.commit()
             logging.info('Add stat info of %s vacancy' % vac_id)
     except Exception as ex:
         logging.error(ex)

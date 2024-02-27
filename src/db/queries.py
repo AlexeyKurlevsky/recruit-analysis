@@ -48,5 +48,4 @@ def insert_status_from_json():
         stmt = insert(ApplicantsStatus).values(id=status_id, name=APPLICANT_STATUSES[status_id])
         with engine.connect() as conn:
             result = conn.execute(stmt)
-            conn.commit()
         applicant_status_arr.append(status_id)

@@ -4,6 +4,7 @@ import json
 
 from dotenv import load_dotenv
 from sqlalchemy import create_engine
+from airflow.settings import DAGS_FOLDER
 
 load_dotenv()
 
@@ -26,8 +27,10 @@ SQLALCHEMY_DB_URI = (f'postgresql+psycopg2://'
                      f'{DATABASE_HOST}:{DATABASE_PORT}/{DATABASE_HUNTFLOW}')
 
 MAX_ITEM_ON_PAGE = 50
-
-f = open('./config/applicant_statuses.json')
+try:
+    f = open('./config/applicant_statuses.json')
+except FileNotFoundError:
+    f = open(f'{DAGS_FOLDER}/config/applicant_statuses.json')
 applicant_statuses = json.load(f)
 APPLICANT_STATUSES = {elem['id']: elem['name'] for elem in applicant_statuses}
 

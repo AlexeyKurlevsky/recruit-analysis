@@ -108,7 +108,6 @@ class HuntHandler:
                                             type=res['type'])
             with engine.connect() as conn:
                 result = conn.execute(stmt)
-                conn.commit()
         except Exception as ex:
             logging.error(ex)
 
@@ -130,7 +129,6 @@ class HuntHandler:
                                                 name=name)
             with engine.connect() as conn:
                 result = conn.execute(stmt)
-                conn.commit()
         except Exception as ex:
             logging.error(ex)
 
