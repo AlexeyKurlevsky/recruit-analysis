@@ -1,17 +1,13 @@
 import logging
-import pandas as pd
-import os
 
-from airflow.settings import DAGS_FOLDER
 from airflow.models import TaskInstance
-from datetime import datetime
 from sqlalchemy import insert
 from typing import List, Optional
 
 from src.config import engine
-from src.db.queries import get_all_coworkers_id, get_all_vacancies_id, get_open_vacancy_id, get_all_status_applicant
-from src.db.tables import AllVacancies, ApplicantsStatus, VacStatInfo
-from src.handler.func import remove_additional_column
+from src.db.queries import get_all_coworkers_id, get_all_vacancies_id, get_open_vacancy_id, get_all_status_applicant, \
+    delete_all_row_new_vacancies, insert_new_vacancy, get_all_new_vacancies
+from src.db.tables import AllVacancies, ApplicantsStatus, VacStatInfo, NewVacancies
 from src.handler.hunt_handler import HuntHandler
 from src.parser.hunt_parser import HuntFlowParser
 
@@ -21,39 +17,31 @@ def get_new_vacancies(ti: TaskInstance, **kwargs) -> Optional[str]:
     new_vac = []
     arr_id_vacancies = get_all_vacancies_id()
     arr_vac = handler.get_all_vacancies()
+    delete_all_row_new_vacancies()
     for vac in arr_vac:
         if vac['id'] not in arr_id_vacancies:
+            insert_new_vacancy(vac)
+            arr_id_vacancies.append(vac['id'])
             new_vac.append(vac)
     if new_vac:
-        now = datetime.now()
-        save_path = f'{DAGS_FOLDER}/new_vacancies_tmp_{now.isoformat()}.csv'
-        df = pd.DataFrame(new_vac)
-        logging.info(f'Save file {save_path} with {df.shape[0]} rows')
-        df.to_csv(save_path, index=False)
-        ti.xcom_push(key='save_path', value=save_path)
+        logging.info(f'Get {len(new_vac)} new vacancy')
         return 'insert_new_vacancies'
     else:
         return None
 
 
 def add_new_vacancies(ti: TaskInstance, **kwargs):
-    save_path = ti.xcom_pull(key='save_path')
-    logging.info(f'Get save file path {save_path}')
-    # TODO: сделать временную таблицу в БД
-    df = pd.read_csv(save_path, keep_default_na=False)
-    arr = df.to_dict('records')
+    arr = get_all_new_vacancies()
     prepare_new_vacancies(arr)
-    if os.path.exists(save_path):
-        os.remove(save_path)
-        logging.info(f"The file {save_path} has been deleted.")
 
 
-def prepare_new_vacancies(arr_vac: list):
+def prepare_new_vacancies(arr_vac: list[NewVacancies]):
     handler = HuntHandler()
     # TODO: Добавить динамическое создание столбца
     arr_coworkers_id = get_all_coworkers_id()
-    for row in arr_vac:
-        row = remove_additional_column(row, handler.additional_fields)
+    for row_alchemy in arr_vac:
+        # TODO: как-то кривовато
+        row = {col.name: getattr(row_alchemy, col.name) for col in NewVacancies.__table__.columns}
         log_info = handler.get_log_vacancy(row['id'], row['created'])
 
         if log_info:
@@ -95,6 +83,7 @@ def prepare_new_vacancies(arr_vac: list):
             with engine.connect() as conn:
                 result = conn.execute(stmt)
         except Exception as ex:
+            print(ex)
             logging.error(ex)
             continue
 

@@ -1,8 +1,10 @@
-from sqlalchemy import select, insert
+import logging
+
+from sqlalchemy import select, insert, delete
 from sqlalchemy.orm import Session
 
 from src.config import engine, APPLICANT_STATUSES
-from src.db.tables import Coworkers, StatusReasons, AllVacancies, ApplicantsStatus
+from src.db.tables import Coworkers, StatusReasons, AllVacancies, ApplicantsStatus, NewVacancies
 
 
 def get_all_coworkers_id():
@@ -49,3 +51,33 @@ def insert_status_from_json():
         with engine.connect() as conn:
             result = conn.execute(stmt)
         applicant_status_arr.append(status_id)
+
+
+def delete_all_row_new_vacancies():
+    stmt = delete(NewVacancies)
+    try:
+        with engine.connect() as conn:
+            result = conn.execute(stmt)
+            logging.info('Delete all rows from new vacancies')
+    except Exception:
+        logging.error('failed to delete new_vacancies table')
+
+
+def insert_new_vacancy(row):
+    for field in row['additional_fields_list']:
+        del row[field]
+    stmt = insert(NewVacancies).values(**row)
+    try:
+        with engine.connect() as conn:
+            result = conn.execute(stmt)
+            logging.debug('Insert new vacancy in tmp table')
+    except Exception as ex:
+        logging.error('failed to insert new_vacancies table')
+        logging.error(ex)
+
+
+def get_all_new_vacancies():
+    stmt = select(NewVacancies)
+    with Session(engine) as session:
+        res = session.execute(stmt).scalars().all()
+    return res
