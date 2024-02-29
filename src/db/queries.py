@@ -35,13 +35,6 @@ def get_all_status_applicant():
     return res
 
 
-def get_open_vacancy_id():
-    stmt = select(AllVacancies.id).where(AllVacancies.state == 'OPEN')
-    with Session(engine) as session:
-        res = session.execute(stmt).scalars().all()
-    return res
-
-
 def insert_status_from_json():
     applicant_status_arr = get_all_status_applicant()
     for status_id in APPLICANT_STATUSES:
@@ -78,6 +71,16 @@ def insert_new_vacancy(row):
 
 def get_all_new_vacancies():
     stmt = select(NewVacancies)
+    with Session(engine) as session:
+        res = session.execute(stmt).scalars().all()
+    return res
+
+
+def get_vacancy_id_by_state(state, flg_id=True):
+    if flg_id:
+        stmt = select(AllVacancies.id).where(AllVacancies.state == state)
+    else:
+        stmt = select(AllVacancies).where(AllVacancies.state == state)
     with Session(engine) as session:
         res = session.execute(stmt).scalars().all()
     return res

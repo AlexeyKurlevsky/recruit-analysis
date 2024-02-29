@@ -1,16 +1,12 @@
 import logging
 
 from airflow.models import TaskInstance
-from sqlalchemy import insert
-from typing import List, Optional
+from typing import Optional
 
-from src.config import engine
-from src.db.queries import get_all_coworkers_id, get_all_vacancies_id, get_open_vacancy_id, get_all_status_applicant, \
-    delete_all_row_new_vacancies, insert_new_vacancy, get_all_new_vacancies
-from src.db.tables import AllVacancies, ApplicantsStatus, VacStatInfo, NewVacancies
-from src.func import prepare_new_vacancies
+from src.db.queries import (get_all_vacancies_id,
+                            delete_all_row_new_vacancies, insert_new_vacancy, get_all_new_vacancies)
+from src.func import prepare_new_vacancies, update_vacancy
 from src.handler.hunt_handler import HuntHandler
-from src.parser.hunt_parser import HuntFlowParser
 
 
 def get_new_vacancies(ti: TaskInstance, **kwargs) -> Optional[str]:
@@ -36,32 +32,9 @@ def add_new_vacancies(ti: TaskInstance, **kwargs):
     prepare_new_vacancies(arr)
 
 
-def insert_applicant_status():
-    parse = HuntFlowParser(url_parse='https://huntflow.ru',
-                           url_api='https://api.huntflow.ru')
-    all_status_id = get_all_status_applicant()
-    open_vac_id = get_open_vacancy_id()
-    try:
-        for vac_id in open_vac_id:
-            applicant_status_info = parse.get_vacancy_stat_info(vac_id)
+def update_hold_vacancies(ti: TaskInstance, **kwargs):
+    update_vacancy('HOLD')
 
-            if applicant_status_info is None:
-                continue
-            items = applicant_status_info.get('items')
-            for status_id in items:
-                if status_id not in all_status_id:
-                    stmt = insert(ApplicantsStatus).values(id=status_id, name=None)
-                    with engine.connect() as conn:
-                        result = conn.execute(stmt)
-                    all_status_id.append(status_id)
-                stmt = insert(VacStatInfo).values(vac_id=vac_id,
-                                                  status_id=status_id,
-                                                  value=items[status_id])
-                with engine.connect() as conn:
-                    result = conn.execute(stmt)
-            logging.info('Add stat info of %s vacancy' % vac_id)
-    except Exception as ex:
-        logging.error(ex)
-        parse.logout()
-    finally:
-        parse.logout()
+
+def update_open_vacancies(ti: TaskInstance, **kwargs):
+    update_vacancy('OPEN')

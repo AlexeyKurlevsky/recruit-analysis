@@ -12,11 +12,12 @@ default_args = {
 }
 
 with DAG(
-    dag_id="add_all_vacancies",
-    start_date=datetime.datetime(2024, 2, 27),
     catchup=False,
+    dag_id="add_all_vacancies",
+    start_date=datetime.datetime(2024, 1, 27),
     schedule="@daily",
-    default_args=default_args
+    max_active_runs=1,
+    default_args=default_args,
 ) as dag:
     get_all_vac_from_hf = BranchPythonOperator(
         task_id='get_new_vacancies',
