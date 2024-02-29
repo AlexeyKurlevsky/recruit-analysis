@@ -28,6 +28,7 @@ class AllVacancies(Base):
     flg_close_recruiter = Column(Boolean, comment="True if the vacancy was filled by a recruit")
     coworkers_id = Column(Integer, ForeignKey("coworkers.id"), comment="id reason")
     date_closed = Column(DateTime(), comment="date closed vacancy")
+    date_last_log = Column(DateTime(), comment="date last log")
 
 
 class Coworkers(Base):
