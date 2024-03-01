@@ -1,3 +1,7 @@
+В проекте используется Python 3.10. Запуск проекта:
+```commandline
+sh ./bin/start_project.sh
+```
 Для того, чтобы контейнеры могли подсоединиться к локальной БД 
 необходимо внести следующие настройки:
 
@@ -15,4 +19,9 @@ host 	huntflow_db 	superset 	192.168.0.0/16 		scram-sha-256
 3. Перезапустить постгрес:
 ```commandline
 sudo servcie postgresql restart
+```
+
+Генерация AIRFLOW_SECRET_KEY
+```commandline
+openssl rand -base64 32
 ```
