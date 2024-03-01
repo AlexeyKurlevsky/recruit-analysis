@@ -27,14 +27,16 @@ class HuntFlowParser:
     def get_driver(self):
         options = webdriver.ChromeOptions()
         driver = webdriver.Chrome(options=options)
-        driver.get(f'{self.url_parse}/account/login')
+        driver.get(f"{self.url_parse}/account/login")
 
-        driver.find_element(By.ID, 'email').send_keys(HUNTFLOW_USERNAME)
-        driver.find_element(By.ID, 'password').send_keys(HUNTFLOW_PASSWORD)
-        login_button = driver.find_element(By.CSS_SELECTOR, "button[data-qa='account-login-submit']")
+        driver.find_element(By.ID, "email").send_keys(HUNTFLOW_USERNAME)
+        driver.find_element(By.ID, "password").send_keys(HUNTFLOW_PASSWORD)
+        login_button = driver.find_element(
+            By.CSS_SELECTOR, "button[data-qa='account-login-submit']"
+        )
 
         # TODO: проверка доступа кнопки
-        assert login_button.is_enabled(), 'login button is disable'
+        assert login_button.is_enabled(), "login button is disable"
         login_button.click()
 
         WebDriverWait(driver=driver, timeout=10).until(
@@ -42,11 +44,11 @@ class HuntFlowParser:
         )
 
         try:
-            errors = driver.find_element(By.CLASS_NAME, 'error--_ePXW')
-            logging.error('Incorrect credentials')
+            errors = driver.find_element(By.CLASS_NAME, "error--_ePXW")
+            logging.error("Incorrect credentials")
             raise ValueError(errors.text)
         except NoSuchElementException:
-            logging.info('Login success!!!')
+            logging.info("Login success!!!")
 
         self._driver = driver
         return self._driver
@@ -74,22 +76,27 @@ class HuntFlowParser:
         cook_drive = self._driver.get_cookies()
         cookies_dict = {}
         for cookie in cook_drive:
-            cookies_dict[cookie['name']] = cookie['value']
+            cookies_dict[cookie["name"]] = cookie["value"]
 
-        resp = requests.get(f'{self.url_parse}/my/{self._org_nick}/vacancy/{vac_id}/stats', cookies=cookies_dict)
+        resp = requests.get(
+            f"{self.url_parse}/my/{self._org_nick}/vacancy/{vac_id}/stats",
+            cookies=cookies_dict,
+        )
         if resp.status_code != 200:
-            logging.error('Not stat information about %s vacancy' % vac_id)
+            logging.error("Not stat information about %s vacancy" % vac_id)
             return None
 
         info = json.loads(resp.content)
         return info
 
     def logout(self):
-        digital_hr_button = self._driver.find_element(By.CLASS_NAME, 'title--b57Ew')
+        digital_hr_button = self._driver.find_element(By.CLASS_NAME, "title--b57Ew")
         digital_hr_button.click()
         WebDriverWait(driver=self._driver, timeout=10).until(
             ec.presence_of_element_located((By.XPATH, '//a[@href="/account/logout"]'))
         )
-        logout_button = self._driver.find_element(By.XPATH, '//a[@href="/account/logout"]')
+        logout_button = self._driver.find_element(
+            By.XPATH, '//a[@href="/account/logout"]'
+        )
         logout_button.click()
-        logging.info('Logout from HuntFLow. Goodbye!!!')
+        logging.info("Logout from HuntFLow. Goodbye!!!")

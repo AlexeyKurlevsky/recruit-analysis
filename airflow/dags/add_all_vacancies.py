@@ -8,7 +8,7 @@ from src.task import get_new_vacancies, add_new_vacancies
 
 default_args = {
     "retries": 2,
-    'retry_delay': timedelta(minutes=1),
+    "retry_delay": timedelta(minutes=1),
 }
 
 with DAG(
@@ -20,15 +20,15 @@ with DAG(
     default_args=default_args,
 ) as dag:
     get_all_vac_from_hf = BranchPythonOperator(
-        task_id='get_new_vacancies',
+        task_id="get_new_vacancies",
         python_callable=get_new_vacancies,
-        provide_context=True
+        provide_context=True,
     )
 
     insert_new_vacancies = PythonOperator(
-        task_id='insert_new_vacancies',
+        task_id="insert_new_vacancies",
         python_callable=add_new_vacancies,
-        provide_context=True
+        provide_context=True,
     )
 
     get_all_vac_from_hf >> insert_new_vacancies

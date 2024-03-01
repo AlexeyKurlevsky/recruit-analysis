@@ -8,22 +8,30 @@ from src.db.tables import NewVacancies, AllVacancies
 from src.handler.hunt_handler import HuntHandler
 
 
-def prepare_new_vacancies(arr_vac: list[NewVacancies]):
+def insert_new_vacancies(arr_vac: list[NewVacancies]):
+    """
+    Вставить новые вакансии
+    :param arr_vac: Список новых вакансий (sqlalchemy объекты NewVacancies)
+    :return:
+    """
     handler = HuntHandler()
     # TODO: Добавить динамическое создание столбца
     arr_coworkers_id = get_all_coworkers_id()
     for row_alchemy in arr_vac:
         # TODO: как-то кривовато
-        row = {col.name: getattr(row_alchemy, col.name) for col in NewVacancies.__table__.columns}
-        log_info = handler.get_log_vacancy(row['id'], row['created'])
+        row = {
+            col.name: getattr(row_alchemy, col.name)
+            for col in NewVacancies.__table__.columns
+        }
+        log_info = handler.get_log_vacancy(row["id"], row["created"])
 
         if log_info:
-            coworker_info = log_info['account_data']
-            if coworker_info['id'] not in arr_coworkers_id:
+            coworker_info = log_info["account_data"]
+            if coworker_info["id"] not in arr_coworkers_id:
                 handler.update_coworkers(coworker_info)
-                arr_coworkers_id.append(coworker_info['id'])
-            row['coworkers_id'] = coworker_info['id']
-            row['date_last_log'] = log_info['created']
+                arr_coworkers_id.append(coworker_info["id"])
+            row["coworkers_id"] = coworker_info["id"]
+            row["date_last_log"] = log_info["created"]
             # Если понадобятся статусы
             # if log_info['account_vacancy_hold_reason']:
             #     row['reason_id'] = log_info['account_vacancy_hold_reason']
@@ -40,18 +48,18 @@ def prepare_new_vacancies(arr_vac: list[NewVacancies]):
             # else:
             #     row['reason_id'] = None
 
-            if row['state'] == 'CLOSED':
-                row['date_closed'] = log_info['created']
-                row['flg_close_recruiter'] = handler.check_reason_close(row['id'])
+            if row["state"] == "CLOSED":
+                row["date_closed"] = log_info["created"]
+                row["flg_close_recruiter"] = handler.check_reason_close(row["id"])
             else:
-                row['flg_close_recruiter'] = False
+                row["flg_close_recruiter"] = False
 
         else:
-            row['coworkers_id'] = None
-            row['reason_id'] = None
-            row['date_closed'] = None
-            row['flg_close_recruiter'] = False
-            row['date_last_log'] = None
+            row["coworkers_id"] = None
+            row["reason_id"] = None
+            row["date_closed"] = None
+            row["flg_close_recruiter"] = False
+            row["date_last_log"] = None
 
         try:
             stmt = insert(AllVacancies).values(**row)
@@ -61,10 +69,17 @@ def prepare_new_vacancies(arr_vac: list[NewVacancies]):
             logging.error(ex)
             continue
 
-    logging.info(f'Get {len(arr_vac)} new vacancies')
+    logging.info(f"Get {len(arr_vac)} new vacancies")
 
 
 def update_vacancy(state: str):
+    """
+    Обновление всех вакансий с определенным статусом
+    К примеру, обновляем вакансии, у которых статус OPEN
+    Если у вакансии изменился статус, то происходит обновление по последнему логу
+    :param state: (OPEN, HOLD, CLOSE...)
+    :return:
+    """
     handler = HuntHandler()
     vacancies = get_vacancy_id_by_state(state, flg_id=False)
     arr_coworkers_id = get_all_coworkers_id()
@@ -75,28 +90,30 @@ def update_vacancy(state: str):
         if not log_info:
             continue
 
-        if log_info['state'] == state:
+        if log_info["state"] == state:
             continue
 
-        coworker_info = log_info['account_data']
-        if coworker_info['id'] not in arr_coworkers_id:
+        coworker_info = log_info["account_data"]
+        if coworker_info["id"] not in arr_coworkers_id:
             handler.update_coworkers(coworker_info)
-            arr_coworkers_id.append(coworker_info['id'])
-        update_var['coworkers_id'] = coworker_info['id']
-        update_var['date_last_log'] = log_info['created']
-        update_var['state'] = log_info['state']
+            arr_coworkers_id.append(coworker_info["id"])
+        update_var["coworkers_id"] = coworker_info["id"]
+        update_var["date_last_log"] = log_info["created"]
+        update_var["state"] = log_info["state"]
 
-        if log_info['state'] == 'CLOSED':
-            update_var['date_closed'] = log_info['created']
-            update_var['flg_close_recruiter'] = handler.check_reason_close(vac.id)
+        if log_info["state"] == "CLOSED":
+            update_var["date_closed"] = log_info["created"]
+            update_var["flg_close_recruiter"] = handler.check_reason_close(vac.id)
 
         try:
-            stmt = update(AllVacancies).values(update_var).where(AllVacancies.id == vac.id)
+            stmt = (
+                update(AllVacancies).values(update_var).where(AllVacancies.id == vac.id)
+            )
             with engine.connect() as conn:
                 result = conn.execute(stmt)
-                logging.info('Update %s vacancy' % vac.id)
+                logging.info("Update %s vacancy" % vac.id)
                 cnt += 1
         except Exception as ex:
             logging.error(ex)
             continue
-    logging.info('Update %s vacancies' % cnt)
+    logging.info("Update %s vacancies" % cnt)
