@@ -9,7 +9,7 @@ from src.db.queries import (
     insert_new_vacancy,
     get_all_new_vacancies,
 )
-from src.func import insert_new_vacancies, update_vacancy
+from src.vacancies.func import insert_new_vacancies, update_vacancy
 from src.handler.hunt_handler import HuntHandler
 
 

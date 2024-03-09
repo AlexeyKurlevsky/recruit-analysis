@@ -25,3 +25,11 @@ sudo servcie postgresql restart
 ```commandline
 openssl rand -base64 32
 ```
+
+Генерация FERNET CODE
+```python
+from cryptography.fernet import Fernet
+
+fernet_key = Fernet.generate_key()
+print(fernet_key.decode())
+```

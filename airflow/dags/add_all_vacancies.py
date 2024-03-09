@@ -4,7 +4,7 @@ from airflow import DAG
 from airflow.operators.python import PythonOperator, BranchPythonOperator
 from datetime import timedelta
 
-from src.task import get_new_vacancies, add_new_vacancies
+from src.vacancies.vacancy_tasks import get_new_vacancies, add_new_vacancies
 
 default_args = {
     "retries": 2,

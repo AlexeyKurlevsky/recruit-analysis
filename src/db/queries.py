@@ -1,9 +1,10 @@
 import logging
+from typing import List, Any
 
 from sqlalchemy import select, insert, delete
 from sqlalchemy.orm import Session
 
-from src.config import engine, APPLICANT_STATUSES
+from src.config import engine
 from src.db.tables import (
     Coworkers,
     StatusReasons,
@@ -13,7 +14,7 @@ from src.db.tables import (
 )
 
 
-def get_all_coworkers_id():
+def get_all_coworkers_id() -> List[Any]:
     """
     Идентификаторы всех рекрутеров
     :return:
@@ -24,7 +25,7 @@ def get_all_coworkers_id():
     return res
 
 
-def get_all_status_vacancy():
+def get_all_status_vacancy() -> List[Any]:
     """
     Получить индентификаторы статуса вакансий
     :return:
@@ -35,7 +36,7 @@ def get_all_status_vacancy():
     return res
 
 
-def get_all_vacancies_id():
+def get_all_vacancies_id() -> List[Any]:
     """
     Получить идентификаторы всех имеющихся вакансий
     :return:
@@ -46,35 +47,18 @@ def get_all_vacancies_id():
     return res
 
 
-def get_all_status_applicant():
+def get_status_applicant(name: str) -> List[Any]:
     """
-    Получить идентификаторы статусов кандидатов на вакансию
+    Получить имена статусов кандидатов на вакансию
     :return:
     """
-    stmt = select(ApplicantsStatus.id)
+    stmt = select(ApplicantsStatus.id).where(ApplicantsStatus.name == name)
     with Session(engine) as session:
         res = session.execute(stmt).scalars().all()
     return res
 
 
-def insert_status_from_json():
-    """
-    Вставить новый статус кандидата на вакансию
-    :return:
-    """
-    applicant_status_arr = get_all_status_applicant()
-    for status_id in APPLICANT_STATUSES:
-        if str(status_id) in applicant_status_arr:
-            continue
-        stmt = insert(ApplicantsStatus).values(
-            id=status_id, name=APPLICANT_STATUSES[status_id]
-        )
-        with engine.connect() as conn:
-            result = conn.execute(stmt)
-        applicant_status_arr.append(status_id)
-
-
-def delete_all_row_new_vacancies():
+def delete_all_row_new_vacancies() -> None:
     """
     Удалить все записи из временной таблицы с вакансиями
     :return:
@@ -88,7 +72,7 @@ def delete_all_row_new_vacancies():
         logging.error("failed to delete new_vacancies table")
 
 
-def insert_new_vacancy(row):
+def insert_new_vacancy(row) -> None:
     """
     Добавить новую вакансию
     :param row:
@@ -106,7 +90,7 @@ def insert_new_vacancy(row):
         logging.error(ex)
 
 
-def get_all_new_vacancies():
+def get_all_new_vacancies() -> List[NewVacancies]:
     """
     Получить все новые вакансии из временной таблицы
     :return:
@@ -117,7 +101,7 @@ def get_all_new_vacancies():
     return res
 
 
-def get_vacancy_id_by_state(state, flg_id=True):
+def get_vacancy_id_by_state(state, flg_id=True) -> List[Any]:
     """
     Получить идентификаторы вакансий по статусу
     :param state: (может быть OPEN, HOLD, CLOSE)

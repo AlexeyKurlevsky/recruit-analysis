@@ -17,7 +17,8 @@ from src.parser.func import get_info_vacancy
 
 
 class HuntFlowParser:
-    def __init__(self, url_parse: str, url_api: str):
+    def __init__(self, url_parse: str = "https://huntflow.ru",
+                 url_api: str = "https://api.huntflow.ru"):
         self.url_parse = url_parse
         self.url_api = url_api
         self._driver = self.get_driver
@@ -60,36 +61,23 @@ class HuntFlowParser:
         return self._org_nick
 
     def get_vacancy_stat_info(self, vac_id: int):
-        # Парсинг html страницы
-        # self._driver.get(f'{self.url_parse}/my/{self._org_nick}/view/vacancy/{vac_id}')
-        # try:
-        #     WebDriverWait(driver=self._driver, timeout=10).until(
-        #         ec.presence_of_element_located((By.CLASS_NAME, 'root--z7B1B'))
-        #     )
-        # except TimeoutException:
-        #     logging.error('vacancy %s not found or page don\'t loading' % vac_id)
-        #     return None
-        # status_elem = self._driver.find_element(By.CLASS_NAME, 'root--z7B1B')
-        # html_text = status_elem.get_attribute('innerHTML')
-        # vac_info = get_info_vacancy(html_text)
-
-        cook_drive = self._driver.get_cookies()
-        cookies_dict = {}
-        for cookie in cook_drive:
-            cookies_dict[cookie["name"]] = cookie["value"]
-
-        resp = requests.get(
-            f"{self.url_parse}/my/{self._org_nick}/vacancy/{vac_id}/stats",
-            cookies=cookies_dict,
-        )
-        if resp.status_code != 200:
-            logging.error("Not stat information about %s vacancy" % vac_id)
+        self._driver.get(f'{self.url_parse}/my/{self._org_nick}/view/vacancy/{vac_id}')
+        try:
+            WebDriverWait(driver=self._driver, timeout=10).until(
+                ec.presence_of_element_located((By.CLASS_NAME, 'root--z7B1B'))
+            )
+        except TimeoutException:
+            logging.error('vacancy %s not found or page don\'t loading' % vac_id)
             return None
-
-        info = json.loads(resp.content)
-        return info
+        status_elem = self._driver.find_element(By.CLASS_NAME, 'root--z7B1B')
+        html_text = status_elem.get_attribute('innerHTML')
+        vac_info = get_info_vacancy(html_text)
+        return vac_info
 
     def logout(self):
+        WebDriverWait(driver=self._driver, timeout=10).until(
+            ec.presence_of_element_located((By.CLASS_NAME, 'title--b57Ew'))
+        )
         digital_hr_button = self._driver.find_element(By.CLASS_NAME, "title--b57Ew")
         digital_hr_button.click()
         WebDriverWait(driver=self._driver, timeout=10).until(
