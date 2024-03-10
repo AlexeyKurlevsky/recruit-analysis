@@ -8,5 +8,5 @@ def get_info_vacancy(html_text: str):
     for tag in all_tags:
         count = tag.find("div", {"class": "count--BrEqy"}).find(string=True)
         name = tag["title"]
-        info[name] = count
+        info[name] = int(count)
     return info

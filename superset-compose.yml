@@ -19,7 +19,6 @@ x-superset-image: &superset-image apache/superset:3.1.0
 x-superset-volumes:
   &superset-volumes # /app/pythonpath_docker will be appended to the PYTHONPATH in the final container
   - ./docker:/app/docker
-  - ./docker/pythonpath_dev/schemas.py:/app/superset/databases/schemas.py
   - superset_home:/app/superset_home
 
 version: "3.7"

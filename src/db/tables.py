@@ -62,23 +62,24 @@ class AllVacancies(Base):
     date_last_log = Column(DateTime(), comment="date last log")
 
 
-class StatusReasons(Base):
-    __tablename__ = "status_reasons"
-    id = Column(Integer, primary_key=True)
-    name = Column(String(100), comment="Reason name")
-
-
 class ApplicantsStatus(Base):
     __tablename__ = "applicants_status"
-    id = Column(String, primary_key=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String, comment="name of status")
 
 
 class VacStatInfo(Base):
     __tablename__ = "vacancy_stat_info"
     id = Column(Integer, primary_key=True)
-    vac_id = Column(Integer, ForeignKey("all_vacancies.id"), comment="Vacancy id", nullable=False)
-    status_id = Column(String, ForeignKey("applicants_status.id"), nullable=False, comment="Applicant status id")
+    vac_id = Column(
+        Integer, ForeignKey("all_vacancies.id"), comment="Vacancy id", nullable=False
+    )
+    status_id = Column(
+        Integer,
+        ForeignKey("applicants_status.id"),
+        nullable=False,
+        comment="Applicant status id",
+    )
     value = Column(Integer, comment="value of applicants by status")
     date = Column(
         DateTime(), default=datetime.now(), comment="Date when registrate status"
