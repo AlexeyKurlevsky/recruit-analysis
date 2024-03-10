@@ -15,7 +15,7 @@ from src.config import (
     engine,
     MAX_ITEM_ON_PAGE,
 )
-from src.db.tables import Coworkers, StatusReasons
+from src.db.tables import Coworkers
 from src.handler.func import async_request
 from src.handler.hunt_token_proxy import HuntTokenProxy
 
@@ -124,28 +124,6 @@ class HuntHandler:
             stmt = insert(Coworkers).values(
                 id=res["id"], name=res["name"], type=res["type"]
             )
-            with engine.connect() as conn:
-                result = conn.execute(stmt)
-        except Exception as ex:
-            logging.error(ex)
-
-    def update_status_reasons(self, status_id: tuple):
-        path_dict = {
-            "hold": f"/accounts/{self._org_id}/vacancy_hold_reasons",
-            "close": f"/accounts/{self._org_id}/vacancy_close_reasons",
-        }
-        path = path_dict[status_id[0]]
-
-        resp = asyncio.run(self.client.request(method="GET", path=path))
-        logging.debug("Status code get reasons %s" % resp.status_code)
-        if resp.status_code != 200:
-            logging.error(resp.text)
-            raise ValueError("Status code from get status %s" % resp.status_code)
-        res = json.loads(resp.text)
-        getting_status = {elem["id"]: elem["name"] for elem in res["items"]}
-        name = getting_status[status_id[1]]
-        try:
-            stmt = insert(StatusReasons).values(id=status_id[1], name=name)
             with engine.connect() as conn:
                 result = conn.execute(stmt)
         except Exception as ex:

@@ -7,10 +7,9 @@ from sqlalchemy.orm import Session
 from src.config import engine
 from src.db.tables import (
     Coworkers,
-    StatusReasons,
     AllVacancies,
     ApplicantsStatus,
-    NewVacancies,
+    NewVacancies, VacStatInfo,
 )
 
 
@@ -20,17 +19,6 @@ def get_all_coworkers_id() -> List[Any]:
     :return:
     """
     stmt = select(Coworkers.id)
-    with Session(engine) as session:
-        res = session.execute(stmt).scalars().all()
-    return res
-
-
-def get_all_status_vacancy() -> List[Any]:
-    """
-    Получить индентификаторы статуса вакансий
-    :return:
-    """
-    stmt = select(StatusReasons.id)
     with Session(engine) as session:
         res = session.execute(stmt).scalars().all()
     return res
@@ -112,6 +100,25 @@ def get_vacancy_id_by_state(state, flg_id=True) -> List[Any]:
         stmt = select(AllVacancies.id).where(AllVacancies.state == state)
     else:
         stmt = select(AllVacancies).where(AllVacancies.state == state)
+    with Session(engine) as session:
+        res = session.execute(stmt).scalars().all()
+    return res
+
+
+def check_vac_in_statistic(vac_id: int) -> bool:
+    stmt = select(VacStatInfo.id).where(VacStatInfo.id == vac_id)
+
+    with Session(engine) as session:
+        res = session.execute(stmt).scalars().all()
+
+    if res:
+        return True
+    else:
+        return False
+
+
+def get_id_status_applicant(vac_id: int) -> List[Any]:
+    stmt = select(VacStatInfo.status_id).where(VacStatInfo.id == vac_id)
     with Session(engine) as session:
         res = session.execute(stmt).scalars().all()
     return res
