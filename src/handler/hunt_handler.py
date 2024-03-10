@@ -13,7 +13,7 @@ from src.config import (
     HUNTFLOW_ACCESS_TOKEN,
     HUNTFLOW_REFRESH_TOKEN,
     engine,
-    MAX_ITEM_ON_PAGE,
+    MAX_ITEM_ON_PAGE, HUNTFLOW_URL_API,
 )
 from src.db.tables import Coworkers
 from src.handler.func import async_request
@@ -23,7 +23,7 @@ from src.handler.hunt_token_proxy import HuntTokenProxy
 class HuntHandler:
     def __init__(
         self,
-        url: str = "https://api.huntflow.ru",
+        url: str = HUNTFLOW_URL_API,
         access_token: str = HUNTFLOW_ACCESS_TOKEN,
     ):
         self.__token = ApiToken(

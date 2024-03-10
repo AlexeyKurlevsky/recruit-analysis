@@ -19,6 +19,9 @@ def insert_info_vacancies(state: str) -> None:
     try:
         for vac_id in arr_vac_id:
             applicant_info = parse.get_vacancy_stat_info(vac_id)
+            if applicant_info is None:
+                logging.error("unable to obtain information about candidates for the vacancy %s" % vac_id)
+                continue
             if check_vac_in_statistic(vac_id):
                 update_info_applicant_on_vacancies(vac_id, applicant_info)
             else:
