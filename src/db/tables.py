@@ -71,8 +71,15 @@ class ApplicantsStatus(Base):
 class VacStatInfo(Base):
     __tablename__ = "vacancy_stat_info"
     id = Column(Integer, primary_key=True)
-    vac_id = Column(Integer, ForeignKey("all_vacancies.id"), comment="Vacancy id", nullable=False)
-    status_id = Column(Integer, ForeignKey("applicants_status.id"), nullable=False, comment="Applicant status id")
+    vac_id = Column(
+        Integer, ForeignKey("all_vacancies.id"), comment="Vacancy id", nullable=False
+    )
+    status_id = Column(
+        Integer,
+        ForeignKey("applicants_status.id"),
+        nullable=False,
+        comment="Applicant status id",
+    )
     value = Column(Integer, comment="value of applicants by status")
     date = Column(
         DateTime(), default=datetime.now(), comment="Date when registrate status"

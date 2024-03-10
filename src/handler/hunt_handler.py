@@ -13,7 +13,8 @@ from src.config import (
     HUNTFLOW_ACCESS_TOKEN,
     HUNTFLOW_REFRESH_TOKEN,
     engine,
-    MAX_ITEM_ON_PAGE, HUNTFLOW_URL_API,
+    MAX_ITEM_ON_PAGE,
+    HUNTFLOW_URL_API,
 )
 from src.db.tables import Coworkers
 from src.handler.func import async_request

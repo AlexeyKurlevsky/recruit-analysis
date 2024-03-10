@@ -9,7 +9,8 @@ from src.db.tables import (
     Coworkers,
     AllVacancies,
     ApplicantsStatus,
-    NewVacancies, VacStatInfo,
+    NewVacancies,
+    VacStatInfo,
 )
 
 

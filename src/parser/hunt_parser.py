@@ -11,15 +11,21 @@ from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as ec
 
-from src.config import HUNTFLOW_USERNAME, HUNTFLOW_PASSWORD, HUNTFLOW_ACCESS_TOKEN, SELENIUM_URL, HUNTFLOW_URL, \
-    HUNTFLOW_URL_API, TIME_OUT_LOADING_PAGE
+from src.config import (
+    HUNTFLOW_USERNAME,
+    HUNTFLOW_PASSWORD,
+    HUNTFLOW_ACCESS_TOKEN,
+    SELENIUM_URL,
+    HUNTFLOW_URL,
+    HUNTFLOW_URL_API,
+    TIME_OUT_LOADING_PAGE,
+)
 from src.handler.hunt_handler import HuntHandler
 from src.parser.func import get_info_vacancy
 
 
 class HuntFlowParser:
-    def __init__(self, url_parse: str = HUNTFLOW_URL,
-                 url_api: str = HUNTFLOW_URL_API):
+    def __init__(self, url_parse: str = HUNTFLOW_URL, url_api: str = HUNTFLOW_URL_API):
         self.url_parse = url_parse
         self.url_api = url_api
         self._driver = self.get_driver
@@ -28,10 +34,10 @@ class HuntFlowParser:
     @cached_property
     def get_driver(self):
         options = webdriver.ChromeOptions()
-        options.add_argument('--disable-dev-shm-usage')
-        options.add_argument('--no-sandbox')
-        options.add_argument('--headless')
-        driver = webdriver.Remote(f'{SELENIUM_URL}/wd/hub', options=options)
+        options.add_argument("--disable-dev-shm-usage")
+        options.add_argument("--no-sandbox")
+        options.add_argument("--headless")
+        driver = webdriver.Remote(f"{SELENIUM_URL}/wd/hub", options=options)
         driver.get(f"{self.url_parse}/account/login")
 
         driver.find_element(By.ID, "email").send_keys(HUNTFLOW_USERNAME)
@@ -65,22 +71,22 @@ class HuntFlowParser:
         return self._org_nick
 
     def get_vacancy_stat_info(self, vac_id: int):
-        self._driver.get(f'{self.url_parse}/my/{self._org_nick}/view/vacancy/{vac_id}')
+        self._driver.get(f"{self.url_parse}/my/{self._org_nick}/view/vacancy/{vac_id}")
         try:
             WebDriverWait(driver=self._driver, timeout=TIME_OUT_LOADING_PAGE).until(
-                ec.presence_of_element_located((By.CLASS_NAME, 'root--z7B1B'))
+                ec.presence_of_element_located((By.CLASS_NAME, "root--z7B1B"))
             )
         except TimeoutException:
-            logging.error('vacancy %s not found or page don\'t loading' % vac_id)
+            logging.error("vacancy %s not found or page don't loading" % vac_id)
             return None
-        status_elem = self._driver.find_element(By.CLASS_NAME, 'root--z7B1B')
-        html_text = status_elem.get_attribute('innerHTML')
+        status_elem = self._driver.find_element(By.CLASS_NAME, "root--z7B1B")
+        html_text = status_elem.get_attribute("innerHTML")
         vac_info = get_info_vacancy(html_text)
         return vac_info
 
     def logout(self):
         WebDriverWait(driver=self._driver, timeout=TIME_OUT_LOADING_PAGE).until(
-            ec.presence_of_element_located((By.CLASS_NAME, 'title--b57Ew'))
+            ec.presence_of_element_located((By.CLASS_NAME, "title--b57Ew"))
         )
         digital_hr_button = self._driver.find_element(By.CLASS_NAME, "title--b57Ew")
         digital_hr_button.click()

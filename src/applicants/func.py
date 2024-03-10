@@ -32,9 +32,11 @@ def insert_info_applicant_on_vacancies(vac_id: int, vac_info: dict) -> None:
     """
     for status_name in vac_info:
         status_id = check_status_applicants(status_name)
-        stmt = insert(VacStatInfo).values(vac_id=vac_id,
-                                          status_id=status_id,
-                                          value=vac_info[status_name])
+        stmt = insert(VacStatInfo).values(
+            vac_id=vac_id,
+            status_id=status_id,
+            value=vac_info[status_name]
+        )
         with engine.connect() as conn:
             result = conn.execute(stmt)
 
@@ -51,11 +53,14 @@ def update_info_applicant_on_vacancies(vac_id: int, vac_info: dict) -> None:
         # TODO: можно поставить условие если значение изменилось, то тогда обновлять
         status_arr = get_id_status_applicant(vac_id)
         if status_id in status_arr:
-            stmt = update(VacStatInfo).where(VacStatInfo.status_id == status_id,
-                                             VacStatInfo.vac_id == vac_id).values(value=vac_info[status_name])
+            stmt = (
+                update(VacStatInfo)
+                .where(VacStatInfo.status_id == status_id, VacStatInfo.vac_id == vac_id)
+                .values(value=vac_info[status_name])
+            )
         else:
-            stmt = insert(VacStatInfo).values(vac_id=vac_id,
-                                              status_id=status_id,
-                                              value=vac_info[status_name])
+            stmt = insert(VacStatInfo).values(
+                vac_id=vac_id, status_id=status_id, value=vac_info[status_name]
+            )
         with engine.connect() as conn:
             result = conn.execute(stmt)
