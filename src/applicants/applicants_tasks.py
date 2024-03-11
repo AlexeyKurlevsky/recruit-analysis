@@ -35,7 +35,7 @@ def insert_info_vacancies(state: str) -> None:
         parse.logout()
     except Exception as ex:
         logging.error(ex)
-        parse.logout()
+        parse.get_driver.quit()
 
 
 def update_stat_open_vacancies(ti: TaskInstance, **kwargs) -> None:

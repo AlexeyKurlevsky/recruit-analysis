@@ -97,5 +97,8 @@ class HuntFlowParser:
             By.XPATH, '//a[@href="/account/logout"]'
         )
         logout_button.click()
+        WebDriverWait(driver=self._driver, timeout=TIME_OUT_LOADING_PAGE).until(
+            ec.presence_of_element_located((By.XPATH, '//a[@href="/account/login"]'))
+        )
         self._driver.quit()
         logging.info("Logout from HuntFLow. Goodbye!!!")
