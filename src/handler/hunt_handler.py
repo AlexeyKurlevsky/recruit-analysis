@@ -146,16 +146,15 @@ class HuntHandler:
         path = f"/accounts/{self._org_id}/vacancies/{vacancy_id}/logs"
         date_now = datetime.now().strftime("%Y-%m-%dT%H:%M:%S+03:00")
         params = {"date_begin": date_begin, "date_end": date_now}
+        try:
+            resp = asyncio.run(self.client.request(method="GET", path=path, params=params))
+            logging.debug("response code from log vacancy %s" % resp.status_code)
+            res = json.loads(resp.text)
+        except Exception as ex:
+            logging.error("dont get log vacancy of %s. date begin: %s" % (vacancy_id, date_begin))
+            res = None
 
-        resp = asyncio.run(self.client.request(method="GET", path=path, params=params))
-        logging.debug("response code from log vacancy %s" % resp.status_code)
-
-        if resp.status_code != 200:
-            logging.error(resp.text)
-            return None
-        res = json.loads(resp.text)
-
-        if res["items"]:
+        if res and res["items"]:
             log = res["items"][0]
         else:
             log = None

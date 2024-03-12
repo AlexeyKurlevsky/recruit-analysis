@@ -8,6 +8,13 @@ from sqlalchemy import create_engine
 from airflow.settings import DAGS_FOLDER
 from airflow.models import Variable
 
+
+def check_huntflow_token(dict_token: dict):
+    for key in dict_token:
+        if dict_token[key] is None or dict_token[key] == "CHANGE_ME":
+            raise AirflowException(f"Set {key}")
+
+
 load_dotenv()
 
 FORMAT = "%(asctime)s %(message)s"
@@ -20,8 +27,10 @@ logging.basicConfig(level=logging.INFO, format=FORMAT)
 HUNTFLOW_ACCESS_TOKEN = Variable.get("HUNTFLOW_ACCESS_TOKEN")
 HUNTFLOW_REFRESH_TOKEN = Variable.get("HUNTFLOW_REFRESH_TOKEN")
 
-if HUNTFLOW_ACCESS_TOKEN is None or HUNTFLOW_REFRESH_TOKEN is None:
-    raise AirflowException("Set HUNTFLOW_ACCESS_TOKEN or HUNTFLOW_REFRESH_TOKEN")
+tokens = {"HUNTFLOW_ACCESS_TOKEN": HUNTFLOW_ACCESS_TOKEN,
+          "HUNTFLOW_REFRESH_TOKEN": HUNTFLOW_REFRESH_TOKEN}
+
+check_huntflow_token(tokens)
 
 HUNTFLOW_USERNAME = os.getenv("HUNTFLOW_USERNAME")
 HUNTFLOW_PASSWORD = os.getenv("HUNTFLOW_PASSWORD")
