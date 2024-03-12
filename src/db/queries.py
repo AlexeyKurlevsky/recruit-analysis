@@ -107,7 +107,7 @@ def get_vacancy_id_by_state(state, flg_id=True) -> List[Any]:
 
 
 def check_vac_in_statistic(vac_id: int) -> bool:
-    stmt = select(VacStatInfo.id).where(VacStatInfo.id == vac_id)
+    stmt = select(VacStatInfo.id).where(VacStatInfo.vac_id == vac_id)
 
     with Session(engine) as session:
         res = session.execute(stmt).scalars().all()
@@ -119,7 +119,7 @@ def check_vac_in_statistic(vac_id: int) -> bool:
 
 
 def get_id_status_applicant(vac_id: int) -> List[Any]:
-    stmt = select(VacStatInfo.status_id).where(VacStatInfo.id == vac_id)
+    stmt = select(VacStatInfo.status_id).where(VacStatInfo.vac_id == vac_id)
     with Session(engine) as session:
         res = session.execute(stmt).scalars().all()
     return res

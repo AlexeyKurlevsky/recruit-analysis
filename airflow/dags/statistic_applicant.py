@@ -15,7 +15,7 @@ with DAG(
     dag_id="statistic_applicant",
     catchup=False,
     start_date=datetime.datetime(2024, 1, 27),
-    schedule="@hourly",
+    schedule="@daily",
     max_active_runs=1,
     default_args=default_args,
 ) as dag:
