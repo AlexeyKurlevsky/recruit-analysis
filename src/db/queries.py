@@ -1,8 +1,10 @@
 import logging
 from typing import List, Any
+from datetime import datetime
 
 from sqlalchemy import select, insert, delete
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 
 from src.config import engine
 from src.db.tables import (
@@ -107,15 +109,31 @@ def get_vacancy_id_by_state(state, flg_id=True) -> List[Any]:
 
 
 def check_vac_in_statistic(vac_id: int) -> bool:
-    stmt = select(VacStatInfo.id).where(VacStatInfo.vac_id == vac_id)
-
+    """
+    Проверить последнюю дату по вакансии.
+    Если последняя дата совпадает с текущей, то пропустить вакансию
+    Если дата не совпадает или вообще нет записи, то нужно добавить строку
+    :param vac_id:
+    :return: True - нужно вставить запись, False - пропустить вакансию
+    """
+    stmt = (
+        select(VacStatInfo.vac_id, func.max(VacStatInfo.date))
+        .where(VacStatInfo.vac_id == vac_id)
+        .group_by(VacStatInfo.vac_id)
+    )
     with Session(engine) as session:
-        res = session.execute(stmt).scalars().all()
+        res = session.execute(stmt).all()
 
-    if res:
+    if not res:
         return True
-    else:
+
+    date_today = datetime.today().date()
+    date_vac = res[0][1].date()
+
+    if date_today == date_vac:
         return False
+    else:
+        return True
 
 
 def get_id_status_applicant(vac_id: int) -> List[Any]:
