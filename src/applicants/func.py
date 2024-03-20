@@ -33,9 +33,7 @@ def insert_info_applicant_on_vacancies(vac_id: int, vac_info: dict) -> None:
     for status_name in vac_info:
         status_id = check_status_applicants(status_name)
         stmt = insert(VacStatInfo).values(
-            vac_id=vac_id,
-            status_id=status_id,
-            value=vac_info[status_name]
+            vac_id=vac_id, status_id=status_id, value=vac_info[status_name]
         )
         with engine.connect() as conn:
             result = conn.execute(stmt)

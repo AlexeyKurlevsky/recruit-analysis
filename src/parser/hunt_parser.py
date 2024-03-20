@@ -86,12 +86,12 @@ class HuntFlowParser:
 
     def logout(self):
         WebDriverWait(driver=self._driver, timeout=TIME_OUT_LOADING_PAGE).until(
-            ec.presence_of_element_located((By.CLASS_NAME, "title--b57Ew"))
+            ec.element_to_be_clickable((By.CLASS_NAME, "title--b57Ew"))
         )
         digital_hr_button = self._driver.find_element(By.CLASS_NAME, "title--b57Ew")
         digital_hr_button.click()
         WebDriverWait(driver=self._driver, timeout=TIME_OUT_LOADING_PAGE).until(
-            ec.presence_of_element_located((By.XPATH, '//a[@href="/account/logout"]'))
+            ec.element_to_be_clickable((By.XPATH, '//a[@href="/account/logout"]'))
         )
         logout_button = self._driver.find_element(
             By.XPATH, '//a[@href="/account/logout"]'

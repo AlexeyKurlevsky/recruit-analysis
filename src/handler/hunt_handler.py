@@ -147,11 +147,15 @@ class HuntHandler:
         date_now = datetime.now().strftime("%Y-%m-%dT%H:%M:%S+03:00")
         params = {"date_begin": date_begin, "date_end": date_now}
         try:
-            resp = asyncio.run(self.client.request(method="GET", path=path, params=params))
+            resp = asyncio.run(
+                self.client.request(method="GET", path=path, params=params)
+            )
             logging.debug("response code from log vacancy %s" % resp.status_code)
             res = json.loads(resp.text)
         except Exception as ex:
-            logging.error("dont get log vacancy of %s. date begin: %s" % (vacancy_id, date_begin))
+            logging.error(
+                "dont get log vacancy of %s. date begin: %s" % (vacancy_id, date_begin)
+            )
             res = None
 
         if res and res["items"]:
