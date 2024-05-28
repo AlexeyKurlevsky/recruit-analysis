@@ -54,8 +54,8 @@ services:
     environment:
       - SE_OPTS=--session-timeout 3600
       - SE_VNC_NO_PASSWORD=true
-    ports:
-      - 4444:4444
+    expose:
+      - 4444
     restart: always
     networks:
       - my_network

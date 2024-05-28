@@ -5,6 +5,7 @@ import json
 from functools import cached_property
 
 from selenium import webdriver
+from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.common import NoSuchElementException
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.support.wait import WebDriverWait
@@ -30,19 +31,24 @@ class HuntFlowParser:
         self.url_api = url_api
         self._driver = self.get_driver
         self._org_nick = self.get_org_nick
+        self.login_flg = False
 
     @cached_property
-    def get_driver(self):
+    def get_driver(self) -> WebDriver:
         options = webdriver.ChromeOptions()
         options.add_argument("--disable-dev-shm-usage")
         options.add_argument("--no-sandbox")
         options.add_argument("--headless")
+        options.add_argument("--start-maximized")
         driver = webdriver.Remote(f"{SELENIUM_URL}/wd/hub", options=options)
-        driver.get(f"{self.url_parse}/account/login")
+        self._driver = driver
+        return self._driver
 
-        driver.find_element(By.ID, "email").send_keys(HUNTFLOW_USERNAME)
-        driver.find_element(By.ID, "password").send_keys(HUNTFLOW_PASSWORD)
-        login_button = driver.find_element(
+    def login(self) -> None:
+        self._driver.get(f"{self.url_parse}/account/login")
+        self._driver.find_element(By.NAME, "email").send_keys(HUNTFLOW_USERNAME)
+        self._driver.find_element(By.NAME, "password").send_keys(HUNTFLOW_PASSWORD)
+        login_button = self._driver.find_element(
             By.CSS_SELECTOR, "button[data-qa='account-login-submit']"
         )
 
@@ -50,27 +56,27 @@ class HuntFlowParser:
         assert login_button.is_enabled(), "login button is disable"
         login_button.click()
 
-        WebDriverWait(driver=driver, timeout=TIME_OUT_LOADING_PAGE).until(
+        WebDriverWait(driver=self._driver, timeout=TIME_OUT_LOADING_PAGE).until(
             lambda x: x.execute_script("return document.readyState === 'complete'")
         )
 
         try:
-            errors = driver.find_element(By.CLASS_NAME, "error--_ePXW")
+            errors = self._driver.find_element(By.CLASS_NAME, "error--_ePXW")
             logging.error("Incorrect credentials")
             raise ValueError(errors.text)
         except NoSuchElementException:
             logging.info("Login success!!!")
-
-        self._driver = driver
-        return self._driver
+            self.login_flg = True
 
     @cached_property
-    def get_org_nick(self):
+    def get_org_nick(self) -> int:
         handler = HuntHandler(self.url_api, access_token=HUNTFLOW_ACCESS_TOKEN)
         self._org_nick = handler.org_id[1]
         return self._org_nick
 
     def get_vacancy_stat_info(self, vac_id: int):
+        if not self.login_flg:
+            self.login()
         self._driver.get(f"{self.url_parse}/my/{self._org_nick}/view/vacancy/{vac_id}")
         try:
             WebDriverWait(driver=self._driver, timeout=TIME_OUT_LOADING_PAGE).until(
@@ -84,7 +90,7 @@ class HuntFlowParser:
         vac_info = get_info_vacancy(html_text)
         return vac_info
 
-    def logout(self):
+    def logout(self) -> None:
         WebDriverWait(driver=self._driver, timeout=TIME_OUT_LOADING_PAGE).until(
             ec.element_to_be_clickable((By.CLASS_NAME, "title--b57Ew"))
         )
