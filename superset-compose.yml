@@ -30,9 +30,13 @@ services:
     command: ["/app/docker/docker-bootstrap.sh", "app-gunicorn"]
     user: "root"
     restart: unless-stopped
+    # expose:
+    #   - 8088
     ports:
-      - 8088:8088
+      - "127.0.0.1:8088:8088"
 #    depends_on: *superset-depends-on
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     volumes: *superset-volumes
     networks:
       - my_network
