@@ -14,26 +14,29 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-x-superset-image: &superset-image apache/superset:3.1.0
+x-superset-image: 
+  &superset-image
+  build:
+    context: .
+    dockerfile: Dockerfile.superset
+
 #x-superset-depends-on: &superset-depends-on
 x-superset-volumes:
   &superset-volumes # /app/pythonpath_docker will be appended to the PYTHONPATH in the final container
-  - ./docker:/app/docker
+  - ./superset:/app/docker
   - superset_home:/app/superset_home
 
 version: "3.7"
 services:
   superset:
     env_file: .env
-    image: *superset-image
+    <<: *superset-image
     container_name: superset_app
     command: ["/app/docker/docker-bootstrap.sh", "app-gunicorn"]
     user: "root"
     restart: unless-stopped
-    # expose:
-    #   - 8088
     ports:
-      - "127.0.0.1:8088:8088"
+      - "8088:8088"
 #    depends_on: *superset-depends-on
     extra_hosts:
       - "host.docker.internal:host-gateway"
@@ -42,7 +45,7 @@ services:
       - my_network
 
   superset-init:
-    image: *superset-image
+    <<: *superset-image
     container_name: superset_init
     command: ["/app/docker/docker-init.sh"]
     env_file: .env
@@ -55,7 +58,7 @@ services:
       - my_network
 
   superset-worker:
-    image: *superset-image
+    <<: *superset-image
     container_name: superset_worker
     command: ["/app/docker/docker-bootstrap.sh", "worker"]
     env_file: .env
@@ -73,7 +76,7 @@ services:
       - my_network
 
   superset-worker-beat:
-    image: *superset-image
+    <<: *superset-image
     container_name: superset_worker_beat
     command: ["/app/docker/docker-bootstrap.sh", "beat"]
     env_file: .env

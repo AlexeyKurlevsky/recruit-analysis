@@ -1,16 +1,11 @@
 import logging
-
-from airflow.models import TaskInstance
 from typing import Optional
 
-from src.db.queries import (
-    get_all_vacancies_id,
-    delete_all_row_new_vacancies,
-    insert_new_vacancy,
-    get_all_new_vacancies,
-)
-from src.vacancies.func import insert_new_vacancies, update_vacancy
+from airflow.models import TaskInstance
+
+from src.db.queries import delete_all_row_new_vacancies, get_all_new_vacancies, get_all_vacancies_id, insert_new_vacancy
 from src.handler.hunt_handler import HuntHandler
+from src.vacancies.func import insert_new_vacancies, update_vacancy
 
 
 def get_new_vacancies(ti: TaskInstance, **kwargs) -> Optional[str]:

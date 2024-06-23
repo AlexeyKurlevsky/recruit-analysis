@@ -23,6 +23,8 @@
 import logging
 import os
 
+from flask_appbuilder.security.manager import AUTH_OAUTH
+from keycloak_security_manager import KeycloakSecurityManager
 from celery.schedules import crontab
 from flask_caching.backends.filesystemcache import FileSystemCache
 
@@ -104,6 +106,43 @@ WEBDRIVER_BASEURL = "http://superset:8088/"
 WEBDRIVER_BASEURL_USER_FRIENDLY = WEBDRIVER_BASEURL
 
 SQLLAB_CTAS_NO_LIMIT = True
+
+AUTH_TYPE = AUTH_OAUTH
+
+AUTH_USER_REGISTRATION = True
+AUTH_USER_REGISTRATION_ROLE = 'Public'
+AUTH_ROLES_SYNC_AT_LOGIN = True
+
+AUTH_ROLES_MAPPING = {
+    'Superset Admin': ["Admin", "Noob"],
+    'Superset Public': ["Public"],
+    'Superset Alpha': ["Alpha"],
+    'Superset Gamma': ["Gamma"],
+}
+
+OAUTH_PROVIDERS = [
+    {
+        "name": 'keycloak',
+        "icon": 'fa-key',
+        "token_key": 'access_token',
+        "remote_app": {
+            "client_id": 'superset',
+            "client_secret": '3F8Vzf2rC3WfpkmKqn2zGEBFcSdLCLQ0',
+            "client_kwargs": {
+                "scope": 'openid roles email profile',
+            },
+            "server_metadata_url": '',
+            "api_base_url": 'http://keycloak:8080/realms/nxt/protocol/openid-connect',
+            "access_token_url": 'http://keycloak:8080/realms/nxt/protocol/openid-connect/token',
+            "authorize_url": 'http://localhost:8080/realms/nxt/protocol/openid-connect/auth',
+            "jwks_uri": 'http://keycloak:8080/realms/nxt/protocol/openid-connect/certs',
+            "userinfo_endpoint": 'http://keycloak:8080/realms/nxt/protocol/openid-connect/userinfo',
+        },
+    },
+]
+
+CUSTOM_SECURITY_MANAGER = KeycloakSecurityManager
+
 
 #
 # Optionally import superset_config_docker.py (which will have been included on

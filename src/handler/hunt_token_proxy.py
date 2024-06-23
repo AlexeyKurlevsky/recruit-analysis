@@ -1,14 +1,11 @@
-import os
 import logging
-import dotenv
-from typing import Dict, Any
+import os
+from typing import Any, Dict
 
-from huntflow_api_client.tokens import ApiToken
-from huntflow_api_client.tokens.proxy import (
-    DummyHuntflowTokenProxy,
-    convert_refresh_result_to_hf_token,
-)
+import dotenv
 from airflow.models import Variable
+from huntflow_api_client.tokens import ApiToken
+from huntflow_api_client.tokens.proxy import DummyHuntflowTokenProxy, convert_refresh_result_to_hf_token
 
 
 def set_env_in_file(key: str, value: str) -> None:

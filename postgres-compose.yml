@@ -7,7 +7,7 @@ services:
     env_file: .env
     volumes:
       - postgres-db-volume:/var/lib/postgresql/data
-      - ./docker/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
+      - ./postgres/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "${POSTGRES_USER}"]
       interval: 10s

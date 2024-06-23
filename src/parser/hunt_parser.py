@@ -1,24 +1,23 @@
-import logging
-import requests
 import json
-
+import logging
 from functools import cached_property
 
+import requests
 from selenium import webdriver
-from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.common import NoSuchElementException
 from selenium.common.exceptions import TimeoutException
-from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.common.by import By
+from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.support import expected_conditions as ec
+from selenium.webdriver.support.wait import WebDriverWait
 
 from src.config import (
-    HUNTFLOW_USERNAME,
-    HUNTFLOW_PASSWORD,
     HUNTFLOW_ACCESS_TOKEN,
-    SELENIUM_URL,
+    HUNTFLOW_PASSWORD,
     HUNTFLOW_URL,
     HUNTFLOW_URL_API,
+    HUNTFLOW_USERNAME,
+    SELENIUM_URL,
     TIME_OUT_LOADING_PAGE,
 )
 from src.handler.hunt_handler import HuntHandler
@@ -48,9 +47,7 @@ class HuntFlowParser:
         self._driver.get(f"{self.url_parse}/account/login")
         self._driver.find_element(By.NAME, "email").send_keys(HUNTFLOW_USERNAME)
         self._driver.find_element(By.NAME, "password").send_keys(HUNTFLOW_PASSWORD)
-        login_button = self._driver.find_element(
-            By.CSS_SELECTOR, "button[data-qa='account-login-submit']"
-        )
+        login_button = self._driver.find_element(By.CSS_SELECTOR, "button[data-qa='account-login-submit']")
 
         # TODO: проверка доступа кнопки
         assert login_button.is_enabled(), "login button is disable"
@@ -99,9 +96,7 @@ class HuntFlowParser:
         WebDriverWait(driver=self._driver, timeout=TIME_OUT_LOADING_PAGE).until(
             ec.element_to_be_clickable((By.XPATH, '//a[@href="/account/logout"]'))
         )
-        logout_button = self._driver.find_element(
-            By.XPATH, '//a[@href="/account/logout"]'
-        )
+        logout_button = self._driver.find_element(By.XPATH, '//a[@href="/account/logout"]')
         logout_button.click()
         WebDriverWait(driver=self._driver, timeout=TIME_OUT_LOADING_PAGE).until(
             ec.presence_of_element_located((By.XPATH, '//a[@href="/account/login"]'))

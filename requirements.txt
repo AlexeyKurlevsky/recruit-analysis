@@ -7,3 +7,5 @@ selenium==4.18.1
 beautifulsoup4==4.12.3
 pandas==2.2.1
 pytest==8.2.1
+pylint==3.2.3
+black==24.2.0

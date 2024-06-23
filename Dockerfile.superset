@@ -1,0 +1,11 @@
+FROM docker.io/apache/superset:3.1.0
+
+USER root
+
+RUN --mount=type=bind,target=/app/requirements.txt,source=./superset/auth_requirements.txt \
+    --mount=type=cache,target=/root/.cache/pip \
+    pip install -r requirements.txt 
+
+USER superset
+
+CMD ["/app/docker/docker-ci.sh"]

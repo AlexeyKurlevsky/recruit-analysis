@@ -1,19 +1,12 @@
 import logging
-from typing import List, Any
 from datetime import datetime
+from typing import Any, List
 
-from sqlalchemy import select, insert, delete
+from sqlalchemy import delete, func, insert, select
 from sqlalchemy.orm import Session
-from sqlalchemy import func
 
 from src.config import engine
-from src.db.tables import (
-    Coworkers,
-    AllVacancies,
-    ApplicantsStatus,
-    NewVacancies,
-    VacStatInfo,
-)
+from src.db.tables import AllVacancies, ApplicantsStatus, Coworkers, NewVacancies, VacStatInfo
 
 
 def get_all_coworkers_id() -> List[Any]:

@@ -2,20 +2,14 @@ import asyncio
 import json
 import logging
 import math
-
-from sqlalchemy import insert
 from datetime import datetime
 from functools import cached_property
+
 from huntflow_api_client import HuntflowAPI
 from huntflow_api_client.tokens import ApiToken
+from sqlalchemy import insert
 
-from src.config import (
-    HUNTFLOW_ACCESS_TOKEN,
-    HUNTFLOW_REFRESH_TOKEN,
-    engine,
-    MAX_ITEM_ON_PAGE,
-    HUNTFLOW_URL_API,
-)
+from src.config import HUNTFLOW_ACCESS_TOKEN, HUNTFLOW_REFRESH_TOKEN, HUNTFLOW_URL_API, MAX_ITEM_ON_PAGE, engine
 from src.db.tables import Coworkers
 from src.handler.func import async_request
 from src.handler.hunt_token_proxy import HuntTokenProxy
@@ -27,13 +21,9 @@ class HuntHandler:
         url: str = HUNTFLOW_URL_API,
         access_token: str = HUNTFLOW_ACCESS_TOKEN,
     ):
-        self.__token = ApiToken(
-            access_token=access_token, refresh_token=HUNTFLOW_REFRESH_TOKEN
-        )
+        self.__token = ApiToken(access_token=access_token, refresh_token=HUNTFLOW_REFRESH_TOKEN)
         self.__token_proxy = HuntTokenProxy(token=self.__token)
-        self.client = HuntflowAPI(
-            base_url=url, token_proxy=self.__token_proxy, auto_refresh_tokens=True
-        )
+        self.client = HuntflowAPI(base_url=url, token_proxy=self.__token_proxy, auto_refresh_tokens=True)
         self._current_user_id = self.current_user_id
         self._org_id, self._org_nick = self.org_id
         self._total_vacancy = self.total_vacancy
@@ -71,9 +61,7 @@ class HuntHandler:
         resp = asyncio.run(self.client.request(method="GET", path=path))
         if resp.status_code != 200:
             logging.error(resp.text)
-            raise ValueError(
-                "Status code from get all vacancies request %s" % resp.status_code
-            )
+            raise ValueError("Status code from get all vacancies request %s" % resp.status_code)
         logging.info("Status code from get all vacancies request %s" % resp.status_code)
         res = json.loads(resp.text)
         self._total_vacancy = res["total_items"]
@@ -85,9 +73,7 @@ class HuntHandler:
         resp = asyncio.run(self.client.request(method="GET", path=path))
         if resp.status_code != 200:
             logging.error(resp.text)
-            raise ValueError(
-                "Status code from get additional fields request %s" % resp.status_code
-            )
+            raise ValueError("Status code from get additional fields request %s" % resp.status_code)
         res = json.loads(resp.text)
         self._additional_fields = list(res.keys())
         return self._additional_fields
@@ -98,9 +84,7 @@ class HuntHandler:
         resp = asyncio.run(self.client.request(method="GET", path=path))
         if resp.status_code != 200:
             logging.error(resp.text)
-            raise ValueError(
-                "Status code from get all coworkers request %s" % resp.status_code
-            )
+            raise ValueError("Status code from get all coworkers request %s" % resp.status_code)
         res = json.loads(resp.text)
         self._total_coworkers = res["total_items"]
         return self._total_coworkers
@@ -122,9 +106,7 @@ class HuntHandler:
                 "type": "unknown",
             }
         try:
-            stmt = insert(Coworkers).values(
-                id=res["id"], name=res["name"], type=res["type"]
-            )
+            stmt = insert(Coworkers).values(id=res["id"], name=res["name"], type=res["type"])
             with engine.connect() as conn:
                 result = conn.execute(stmt)
         except Exception as ex:
@@ -147,15 +129,11 @@ class HuntHandler:
         date_now = datetime.now().strftime("%Y-%m-%dT%H:%M:%S+03:00")
         params = {"date_begin": date_begin, "date_end": date_now}
         try:
-            resp = asyncio.run(
-                self.client.request(method="GET", path=path, params=params)
-            )
+            resp = asyncio.run(self.client.request(method="GET", path=path, params=params))
             logging.debug("response code from log vacancy %s" % resp.status_code)
             res = json.loads(resp.text)
         except Exception as ex:
-            logging.error(
-                "dont get log vacancy of %s. date begin: %s" % (vacancy_id, date_begin)
-            )
+            logging.error("dont get log vacancy of %s. date begin: %s" % (vacancy_id, date_begin))
             res = None
 
         if res and res["items"]:

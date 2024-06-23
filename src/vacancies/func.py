@@ -4,7 +4,7 @@ from sqlalchemy import insert, update
 
 from src.config import engine
 from src.db.queries import get_all_coworkers_id, get_vacancy_id_by_state
-from src.db.tables import NewVacancies, AllVacancies
+from src.db.tables import AllVacancies, NewVacancies
 from src.handler.hunt_handler import HuntHandler
 
 
@@ -19,10 +19,7 @@ def insert_new_vacancies(arr_vac: list[NewVacancies]):
     arr_coworkers_id = get_all_coworkers_id()
     for row_alchemy in arr_vac:
         # TODO: как-то кривовато
-        row = {
-            col.name: getattr(row_alchemy, col.name)
-            for col in NewVacancies.__table__.columns
-        }
+        row = {col.name: getattr(row_alchemy, col.name) for col in NewVacancies.__table__.columns}
         log_info = handler.get_log_vacancy(row["id"], row["created"])
 
         if log_info:
@@ -106,9 +103,7 @@ def update_vacancy(state: str):
             update_var["flg_close_recruiter"] = handler.check_reason_close(vac.id)
 
         try:
-            stmt = (
-                update(AllVacancies).values(update_var).where(AllVacancies.id == vac.id)
-            )
+            stmt = update(AllVacancies).values(update_var).where(AllVacancies.id == vac.id)
             with engine.connect() as conn:
                 result = conn.execute(stmt)
                 logging.info("Update %s vacancy" % vac.id)

@@ -1,11 +1,11 @@
 import asyncio
-import logging
 import json
+import logging
 import math
-
 from typing import Any
 
 from src.config import MAX_ITEM_ON_PAGE
+
 
 # 2135 - закрыли сами
 # 2136 - закрыла сторонняя компания
