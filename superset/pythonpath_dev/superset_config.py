@@ -127,16 +127,16 @@ OAUTH_PROVIDERS = [
         "token_key": 'access_token',
         "remote_app": {
             "client_id": 'superset',
-            "client_secret": '3F8Vzf2rC3WfpkmKqn2zGEBFcSdLCLQ0',
+            "client_secret": os.getenv("KEYCLOAK_CLIENT_SECRET", "some_secret_key"),
             "client_kwargs": {
                 "scope": 'openid roles email profile',
             },
             "server_metadata_url": '',
-            "api_base_url": 'http://keycloak:8080/realms/nxt/protocol/openid-connect',
-            "access_token_url": 'http://keycloak:8080/realms/nxt/protocol/openid-connect/token',
-            "authorize_url": 'http://localhost:8080/realms/nxt/protocol/openid-connect/auth',
-            "jwks_uri": 'http://keycloak:8080/realms/nxt/protocol/openid-connect/certs',
-            "userinfo_endpoint": 'http://keycloak:8080/realms/nxt/protocol/openid-connect/userinfo',
+            "api_base_url": 'http://keycloak:8080/realms/alkurlevsky/protocol/openid-connect',
+            "access_token_url": 'http://keycloak:8080/realms/alkurlevsky/protocol/openid-connect/token',
+            "authorize_url": 'http://localhost:8086/realms/alkurlevsky/protocol/openid-connect/auth',
+            "jwks_uri": 'http://keycloak:8080/realms/alkurlevsky/protocol/openid-connect/certs',
+            "userinfo_endpoint": 'http://keycloak:8080/realms/alkurlevsky/protocol/openid-connect/userinfo',
         },
     },
 ]
