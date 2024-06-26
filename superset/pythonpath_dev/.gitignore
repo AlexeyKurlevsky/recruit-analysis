@@ -19,5 +19,5 @@
 *
 # DON'T ignore the .gitignore
 !.gitignore
-!superset_config.py
+!*.py
 !superset_config_local.example
