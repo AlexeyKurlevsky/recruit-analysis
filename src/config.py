@@ -1,18 +1,19 @@
-import os
 import logging
-import json
+import os
 
-from airflow import AirflowException
+from airflow.exceptions import AirflowException
+from airflow.models import Variable
+from airflow.settings import DAGS_FOLDER
 from dotenv import load_dotenv
 from sqlalchemy import create_engine
-from airflow.settings import DAGS_FOLDER
-from airflow.models import Variable
 
 
-def check_huntflow_token(dict_token: dict):
-    for key in dict_token:
-        if dict_token[key] is None or dict_token[key] == "CHANGE_ME":
-            raise AirflowException(f"Set {key}")
+def get_required_variable(name: str):
+    variable = os.getenv(name)
+    # variable = Variable.get(name)
+    if variable is None or variable == "CHANGE_ME":
+        raise AirflowException(f"Set {name}")
+    return variable
 
 
 load_dotenv()
@@ -21,11 +22,11 @@ FORMAT = "%(asctime)s %(message)s"
 logging.basicConfig(level=logging.INFO, format=FORMAT)
 
 # Для разработки
-# HUNTFLOW_ACCESS_TOKEN = os.getenv("HUNTFLOW_ACCESS_TOKEN")
-# HUNTFLOW_REFRESH_TOKEN = os.getenv("HUNTFLOW_REFRESH_TOKEN")
+HUNTFLOW_ACCESS_TOKEN = get_required_variable("HUNTFLOW_ACCESS_TOKEN")
+HUNTFLOW_REFRESH_TOKEN = get_required_variable("HUNTFLOW_REFRESH_TOKEN")
 
-HUNTFLOW_ACCESS_TOKEN = Variable.get("HUNTFLOW_ACCESS_TOKEN")
-HUNTFLOW_REFRESH_TOKEN = Variable.get("HUNTFLOW_REFRESH_TOKEN")
+# HUNTFLOW_ACCESS_TOKEN = Variable.get("HUNTFLOW_ACCESS_TOKEN")
+# HUNTFLOW_REFRESH_TOKEN = Variable.get("HUNTFLOW_REFRESH_TOKEN")
 
 tokens = {
     "HUNTFLOW_ACCESS_TOKEN": HUNTFLOW_ACCESS_TOKEN,
@@ -55,11 +56,5 @@ SQLALCHEMY_DB_URI = (
 
 MAX_ITEM_ON_PAGE = 50
 TIME_OUT_LOADING_PAGE = 30
-try:
-    f = open("./config/applicant_statuses.json")
-except FileNotFoundError:
-    f = open(f"{DAGS_FOLDER}/config/applicant_statuses.json")
-applicant_statuses = json.load(f)
-APPLICANT_STATUSES = {elem["id"]: elem["name"] for elem in applicant_statuses}
 
 engine = create_engine(SQLALCHEMY_DB_URI)

@@ -1,11 +1,10 @@
 import asyncio
-import logging
 import json
-import math
-
+import logging
 from typing import Any
 
-from src.config import MAX_ITEM_ON_PAGE
+
+logger = logging.getLogger()
 
 # 2135 - закрыли сами
 # 2136 - закрыла сторонняя компания
@@ -36,6 +35,7 @@ def remove_additional_column(elem, columns):
         try:
             del elem[col]
         except Exception as ex:
-            logging.debug("additional column %s is missing" % col)
+            logger.error(ex)
+            logger.debug(f"additional column {col} is missing")
             continue
     return elem

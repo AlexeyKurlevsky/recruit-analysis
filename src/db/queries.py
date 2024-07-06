@@ -1,22 +1,14 @@
 import logging
-from typing import List, Any
 from datetime import datetime
 
-from sqlalchemy import select, insert, delete
+from sqlalchemy import delete, func, insert, select
 from sqlalchemy.orm import Session
-from sqlalchemy import func
 
 from src.config import engine
-from src.db.tables import (
-    Coworkers,
-    AllVacancies,
-    ApplicantsStatus,
-    NewVacancies,
-    VacStatInfo,
-)
+from src.db.tables import AllVacancies, ApplicantsStatus, Coworkers, NewVacancies, VacStatInfo
 
 
-def get_all_coworkers_id() -> List[Any]:
+def get_all_coworkers_id() -> list:
     """
     Идентификаторы всех рекрутеров
     :return:
@@ -27,7 +19,7 @@ def get_all_coworkers_id() -> List[Any]:
     return res
 
 
-def get_all_vacancies_id() -> List[Any]:
+def get_all_vacancies_id() -> list:
     """
     Получить идентификаторы всех имеющихся вакансий
     :return:
@@ -38,7 +30,7 @@ def get_all_vacancies_id() -> List[Any]:
     return res
 
 
-def get_status_applicant(name: str) -> List[Any]:
+def get_status_applicant(name: str) -> list:
     """
     Получить имена статусов кандидатов на вакансию
     :return:
@@ -56,8 +48,8 @@ def delete_all_row_new_vacancies() -> None:
     """
     stmt = delete(NewVacancies)
     try:
-        with engine.connect() as conn:
-            result = conn.execute(stmt)
+        with Session(engine) as session:
+            session.execute(stmt)
             logging.info("Delete all rows from new vacancies")
     except Exception:
         logging.error("failed to delete new_vacancies table")
@@ -73,15 +65,15 @@ def insert_new_vacancy(row) -> None:
         del row[field]
     stmt = insert(NewVacancies).values(**row)
     try:
-        with engine.connect() as conn:
-            result = conn.execute(stmt)
+        with Session(engine) as session:
+            session.execute(stmt)
             logging.debug("Insert new vacancy in tmp table")
     except Exception as ex:
         logging.error("failed to insert new_vacancies table")
         logging.error(ex)
 
 
-def get_all_new_vacancies() -> List[NewVacancies]:
+def get_all_new_vacancies() -> list[NewVacancies]:
     """
     Получить все новые вакансии из временной таблицы
     :return:
@@ -92,7 +84,7 @@ def get_all_new_vacancies() -> List[NewVacancies]:
     return res
 
 
-def get_vacancy_id_by_state(state, flg_id=True) -> List[Any]:
+def get_vacancy_id_by_state(state, flg_id=True) -> list:
     """
     Получить идентификаторы вакансий по статусу
     :param state: (может быть OPEN, HOLD, CLOSE)
@@ -132,11 +124,10 @@ def check_vac_in_statistic(vac_id: int) -> bool:
 
     if date_today == date_vac:
         return False
-    else:
-        return True
+    return True
 
 
-def get_id_status_applicant(vac_id: int) -> List[Any]:
+def get_id_status_applicant(vac_id: int) -> list:
     stmt = select(VacStatInfo.status_id).where(VacStatInfo.vac_id == vac_id)
     with Session(engine) as session:
         res = session.execute(stmt).scalars().all()
