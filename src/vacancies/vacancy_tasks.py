@@ -1,19 +1,16 @@
 import logging
 
 from airflow.models import TaskInstance
-from typing import Optional
 
-from src.db.queries import (
-    get_all_vacancies_id,
-    delete_all_row_new_vacancies,
-    insert_new_vacancy,
-    get_all_new_vacancies,
-)
-from src.vacancies.func import insert_new_vacancies, update_vacancy
+from src.db.queries import delete_all_tmp_vacancies, get_all_new_vacancies, get_all_vacancies_id, insert_tmp_new_vacancy
 from src.handler.hunt_handler import HuntHandler
+from src.vacancies.func import insert_new_vacancies, update_vacancy
 
 
-def get_new_vacancies(ti: TaskInstance, **kwargs) -> Optional[str]:
+logger = logging.getLogger()
+
+
+def get_new_vacancies(ti: TaskInstance, **kwargs) -> str | None:
     """
     Получение новых вакансий
     Логика довольно глупая. Нужно переделать
@@ -28,20 +25,19 @@ def get_new_vacancies(ti: TaskInstance, **kwargs) -> Optional[str]:
     new_vac = []
     arr_id_vacancies = get_all_vacancies_id()
     arr_vac = handler.get_all_vacancies()
-    delete_all_row_new_vacancies()
+    delete_all_tmp_vacancies()
     for vac in arr_vac:
         if vac["id"] not in arr_id_vacancies:
-            insert_new_vacancy(vac)
+            insert_tmp_new_vacancy(vac)
             arr_id_vacancies.append(vac["id"])
             new_vac.append(vac)
     if new_vac:
-        logging.info(f"Get {len(new_vac)} new vacancy")
+        logger.info(f"Get {len(new_vac)} new vacancy")
         return "insert_new_vacancies"
-    else:
-        return None
+    return None
 
 
-def add_new_vacancies(ti: TaskInstance, **kwargs):
+def add_new_vacancies(ti: TaskInstance, **kwargs) -> None:
     """
     Добавить новые вакансии
     :param ti:
@@ -52,9 +48,9 @@ def add_new_vacancies(ti: TaskInstance, **kwargs):
     insert_new_vacancies(arr)
 
 
-def update_hold_vacancies(ti: TaskInstance, **kwargs):
-    update_vacancy("HOLD")
-
-
-def update_open_vacancies(ti: TaskInstance, **kwargs):
-    update_vacancy("OPEN")
+def update_not_closed_vacancies(ti: TaskInstance, **kwargs) -> None:
+    """
+    Обновление всех вакансий кроме статуса closed
+    В аргумент передается статус, который не нужно обновлять
+    """
+    update_vacancy(["CLOSED"])
