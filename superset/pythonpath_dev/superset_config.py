@@ -118,6 +118,7 @@ AUTH_ROLES_MAPPING = {
     'Superset Public': ["Public"],
     'Superset Alpha': ["Alpha"],
     'Superset Gamma': ["Gamma"],
+    'Superset SQLlab': ["sql_lab"],
 }
 
 OAUTH_PROVIDERS = [
