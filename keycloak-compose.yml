@@ -10,7 +10,14 @@ services:
       KC_DB_URL_HOST: ${KEYCLOAK_DB_HOST}
       KC_DB_USERNAME: ${KEYCLOAK_DB_USERNAME}
       KC_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD}
+      KC_PROXY_HEADERS: xforwarded
+      KC_HOSTNAME_STRICT: false
+      KC_HOSTNAME_STRICT_HTTPS: false
+      KC_HTTP_RELATIVE_PATH: /auth
+      KC_HTTP_ENABLED: true
       KEYCLOAK_CLIENT_SECRET: ${KEYCLOAK_CLIENT_SECRET}
+      KC_HTTPS_CERTIFICATE_FILE: /opt/keycloak/conf/mycert.pem
+      KC_HTTPS_CERTIFICATE_KEY_FILE: /opt/keycloak/conf/mycert_key.pem
 
     healthcheck:
       test: [ "CMD", "bash", "-c", "</dev/tcp/localhost/8086" ]
@@ -19,16 +26,14 @@ services:
       retries: 5
       start_period: '10s'
     command:
-      - start-dev
+      - start
       - --import-realm
-      - --health-enabled=true
-      - --hostname-url=http://localhost:8086
-      - --hostname-strict-https=false
-      - --hostname-strict-backchannel=true
     volumes:
       - ./keycloak/alkurlevsky.json:/opt/keycloak/data/import/alkurlevsky.json
+      - ./keycloak/mycert.pem:/opt/keycloak/conf/mycert.pem
+      - ./keycloak/mycert_key.pem:/opt/keycloak/conf/mycert_key.pem
     ports:
-      - '8086:8080'
+      - '127.0.0.1:8086:8080'
     networks:
       - my_network
 
