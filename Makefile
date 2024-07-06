@@ -1,5 +1,5 @@
 format:
-	isort --lai 2 ./src
-	black -l 120 ./src
+	isort --lai 2 ./src ./dags
+	black -l 120 ./src ./dags
 lint:
-	pylint ./src
+	pylint ./src ./dags

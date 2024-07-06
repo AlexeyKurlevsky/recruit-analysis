@@ -2,39 +2,42 @@ import logging
 
 from airflow.models import TaskInstance
 
-from src.applicants.func import insert_info_applicant_on_vacancies
-from src.db.queries import check_vac_in_statistic, get_vacancy_id_by_state
+from src.applicants.func import (
+    check_status_applicants,
+    insert_info_applicant_on_vacancies,
+    update_info_applicant_on_vacancies,
+)
+from src.db.queries import check_vac_in_statistic, get_vacancy_besides_state
 from src.parser.hunt_parser import HuntFlowParser
 
 
-def insert_info_vacancies(state: str) -> None:
-    """
-    Добаление информации о кандидатах по вакансиям со стаусом state
-    :param state: статус вакансии (OPEN, STATE, CLOSED..)
-    :return:
-    """
+logger = logging.getLogger()
+
+
+def update_statistic_vacancies(ti: TaskInstance, **kwargs) -> None:
     parse = HuntFlowParser()
-    arr_vac_id = get_vacancy_id_by_state(state)
-    logging.info("Get %s open vacancies" % len(arr_vac_id))
+    vacancies = get_vacancy_besides_state(["CLOSED"])
+    logging.info(f"Get {len(vacancies)} open vacancies")
     try:
-        for vac_id in arr_vac_id:
-            if check_vac_in_statistic(vac_id):
-                applicant_info = parse.get_vacancy_stat_info(vac_id)
-                if applicant_info is None:
-                    logging.error("unable to obtain information about candidates for the vacancy %s" % vac_id)
-                    continue
-                insert_info_applicant_on_vacancies(vac_id, applicant_info)
-            else:
+        for vacancy in vacancies:
+            logger.info(f"Хочу получить информацию по статусам вакансии {vacancy.id}")
+            applicant_info = parse.get_vacancy_stat_info(vacancy.id)
+            if applicant_info is None:
+                logger.error(f"unable to obtain information about candidates for the vacancy {vacancy.id}")
                 continue
+            for status, value in applicant_info.items():
+                status_id = check_status_applicants(status)
+                logger.info(f"Проверяю запись для вакансии {vacancy.id} по статусу {status_id}")
+                vacancy_stat_info = check_vac_in_statistic(vacancy.id, status_id)
+                if vacancy_stat_info:
+                    logger.info(
+                        f"Обновляю запись {vacancy_stat_info[0].id} для вакансии {vacancy.id} со статусом {status_id}"
+                    )
+                    update_info_applicant_on_vacancies(db_id=vacancy_stat_info[0].id, status_id=status_id, value=value)
+                else:
+                    logger.info(f"Добавляю новую запись для вакансии {vacancy.id} со статусом {status_id}")
+                    insert_info_applicant_on_vacancies(vac_id=vacancy.id, status_id=status_id, value=value)
         parse.logout()
     except Exception as ex:
-        logging.error(ex)
+        logger.error(ex)
         parse.get_driver.quit()
-
-
-def update_stat_open_vacancies(ti: TaskInstance, **kwargs) -> None:
-    insert_info_vacancies("OPEN")
-
-
-def update_stat_hold_vacancies(ti: TaskInstance, **kwargs) -> None:
-    insert_info_vacancies("HOLD")

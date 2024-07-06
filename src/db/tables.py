@@ -1,18 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import (
-    ARRAY,
-    Boolean,
-    Column,
-    DateTime,
-    ForeignKey,
-    Integer,
-    MetaData,
-    Numeric,
-    String,
-    Table,
-    create_engine,
-)
+from sqlalchemy import ARRAY, Boolean, Column, DateTime, ForeignKey, Integer, String
 from sqlalchemy.ext.declarative import declarative_base
 
 from src.config import engine

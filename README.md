@@ -33,3 +33,8 @@ from cryptography.fernet import Fernet
 fernet_key = Fernet.generate_key()
 print(fernet_key.decode())
 ```
+
+Экспорт realm из keycloak
+```commandline
+docker exec -it recruit-analisys-keycloak-1 /opt/keycloak/bin/kc.sh export --dir /opt/keycloak/data --realm alkurlevsky --users realm_file
+```

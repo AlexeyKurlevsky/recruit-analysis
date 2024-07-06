@@ -9,7 +9,7 @@ from src.config import engine
 from src.db.tables import AllVacancies, ApplicantsStatus, Coworkers, NewVacancies, VacStatInfo
 
 
-def get_all_coworkers_id() -> List[Any]:
+def get_all_coworkers_id() -> list:
     """
     Идентификаторы всех рекрутеров
     :return:
@@ -20,7 +20,7 @@ def get_all_coworkers_id() -> List[Any]:
     return res
 
 
-def get_all_vacancies_id() -> List[Any]:
+def get_all_vacancies_id() -> list:
     """
     Получить идентификаторы всех имеющихся вакансий
     :return:
@@ -31,7 +31,7 @@ def get_all_vacancies_id() -> List[Any]:
     return res
 
 
-def get_status_applicant(name: str) -> List[Any]:
+def get_status_applicant(name: str) -> list[ApplicantsStatus.id]:
     """
     Получить имена статусов кандидатов на вакансию
     :return:
@@ -42,21 +42,22 @@ def get_status_applicant(name: str) -> List[Any]:
     return res
 
 
-def delete_all_row_new_vacancies() -> None:
+def delete_all_tmp_vacancies() -> None:
     """
     Удалить все записи из временной таблицы с вакансиями
     :return:
     """
     stmt = delete(NewVacancies)
     try:
-        with engine.connect() as conn:
-            result = conn.execute(stmt)
+        with Session(engine) as session:
+            session.execute(stmt)
+            session.commit()
             logging.info("Delete all rows from new vacancies")
     except Exception:
         logging.error("failed to delete new_vacancies table")
 
 
-def insert_new_vacancy(row) -> None:
+def insert_tmp_new_vacancy(row) -> None:
     """
     Добавить новую вакансию
     :param row:
@@ -66,15 +67,16 @@ def insert_new_vacancy(row) -> None:
         del row[field]
     stmt = insert(NewVacancies).values(**row)
     try:
-        with engine.connect() as conn:
-            result = conn.execute(stmt)
+        with Session(engine) as session:
+            session.execute(stmt)
+            session.commit()
             logging.debug("Insert new vacancy in tmp table")
     except Exception as ex:
         logging.error("failed to insert new_vacancies table")
         logging.error(ex)
 
 
-def get_all_new_vacancies() -> List[NewVacancies]:
+def get_all_new_vacancies() -> list[NewVacancies]:
     """
     Получить все новые вакансии из временной таблицы
     :return:
@@ -85,51 +87,36 @@ def get_all_new_vacancies() -> List[NewVacancies]:
     return res
 
 
-def get_vacancy_id_by_state(state, flg_id=True) -> List[Any]:
+def get_vacancy_besides_state(state: list) -> list[AllVacancies]:
     """
     Получить идентификаторы вакансий по статусу
     :param state: (может быть OPEN, HOLD, CLOSE)
-    :param flg_id: (только идентификаторы или всю информацию)
     :return:
     """
-    if flg_id:
-        stmt = select(AllVacancies.id).where(AllVacancies.state == state)
-    else:
-        stmt = select(AllVacancies).where(AllVacancies.state == state)
+    stmt = select(AllVacancies).where(AllVacancies.state not in state)
     with Session(engine) as session:
         res = session.execute(stmt).scalars().all()
     return res
 
 
-def check_vac_in_statistic(vac_id: int) -> bool:
+def check_vac_in_statistic(vac_id: int, status_id: int) -> list[VacStatInfo]:
     """
-    Проверить последнюю дату по вакансии.
-    Если последняя дата совпадает с текущей, то пропустить вакансию
-    Если дата не совпадает или вообще нет записи, то нужно добавить строку
+    Проверить есть ли запись по определенному статутусу для вакансии
     :param vac_id:
     :return: True - нужно вставить запись, False - пропустить вакансию
     """
     stmt = (
-        select(VacStatInfo.vac_id, func.max(VacStatInfo.date))
-        .where(VacStatInfo.vac_id == vac_id)
-        .group_by(VacStatInfo.vac_id)
+        select(VacStatInfo.id, VacStatInfo.vac_id, func.max(VacStatInfo.date))
+        .where(VacStatInfo.vac_id == vac_id and VacStatInfo.status_id == status_id)
+        .group_by(VacStatInfo.id, VacStatInfo.vac_id)
     )
     with Session(engine) as session:
         res = session.execute(stmt).all()
 
-    if not res:
-        return True
-
-    date_today = datetime.today().date()
-    date_vac = res[0][1].date()
-
-    if date_today == date_vac:
-        return False
-    else:
-        return True
+    return res
 
 
-def get_id_status_applicant(vac_id: int) -> List[Any]:
+def get_id_status_applicant(vac_id: int) -> list:
     stmt = select(VacStatInfo.status_id).where(VacStatInfo.vac_id == vac_id)
     with Session(engine) as session:
         res = session.execute(stmt).scalars().all()

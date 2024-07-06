@@ -1,7 +1,7 @@
 from bs4 import BeautifulSoup
 
 
-def get_info_vacancy(html_text: str):
+def get_info_vacancy(html_text: str) -> dict[str, int]:
     soup = BeautifulSoup(html_text)
     all_tags = soup.find_all("div", {"class": "root--ImnXG"})
     info = {}
