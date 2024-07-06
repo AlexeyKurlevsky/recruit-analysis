@@ -9,8 +9,8 @@ from sqlalchemy import create_engine
 
 
 def get_required_variable(name: str):
-    variable = os.getenv(name)
-    # variable = Variable.get(name)
+    # variable = os.getenv(name)
+    variable = Variable.get(name)
     if variable is None or variable == "CHANGE_ME":
         raise AirflowException(f"Set {name}")
     return variable
@@ -24,16 +24,6 @@ logging.basicConfig(level=logging.INFO, format=FORMAT)
 # Для разработки
 HUNTFLOW_ACCESS_TOKEN = get_required_variable("HUNTFLOW_ACCESS_TOKEN")
 HUNTFLOW_REFRESH_TOKEN = get_required_variable("HUNTFLOW_REFRESH_TOKEN")
-
-# HUNTFLOW_ACCESS_TOKEN = Variable.get("HUNTFLOW_ACCESS_TOKEN")
-# HUNTFLOW_REFRESH_TOKEN = Variable.get("HUNTFLOW_REFRESH_TOKEN")
-
-tokens = {
-    "HUNTFLOW_ACCESS_TOKEN": HUNTFLOW_ACCESS_TOKEN,
-    "HUNTFLOW_REFRESH_TOKEN": HUNTFLOW_REFRESH_TOKEN,
-}
-
-check_huntflow_token(tokens)
 
 HUNTFLOW_USERNAME = os.getenv("HUNTFLOW_USERNAME")
 HUNTFLOW_PASSWORD = os.getenv("HUNTFLOW_PASSWORD")

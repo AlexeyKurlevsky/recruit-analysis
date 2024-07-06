@@ -22,6 +22,9 @@ from src.handler.hunt_handler import HuntHandler
 from src.parser.func import get_info_vacancy
 
 
+logger = logging.getLogger()
+
+
 class HuntFlowParser:
     def __init__(self, url_parse: str = HUNTFLOW_URL, url_api: str = HUNTFLOW_URL_API):
         self.url_parse = url_parse
@@ -57,19 +60,19 @@ class HuntFlowParser:
 
         try:
             errors = self.driver.find_element(By.CLASS_NAME, "error--_ePXW")
-            logging.error("Incorrect credentials")
+            logger.error("Incorrect credentials")
             raise ValueError(errors.text)
         except NoSuchElementException:
-            logging.info("Login success!!!")
+            logger.info("Login success!!!")
             self.login_flg = True
 
     @cached_property
-    def get_org_nick(self) -> int:
+    def get_org_nick(self) -> str:
         handler = HuntHandler(self.url_api, access_token=HUNTFLOW_ACCESS_TOKEN)
         self._org_nick = handler.org_id[1]
         return self._org_nick
 
-    def get_vacancy_stat_info(self, vac_id: int):
+    def get_vacancy_stat_info(self, vac_id: int) -> dict[str, int] | None:
         if not self.login_flg:
             self.login()
         self.driver.get(f"{self.url_parse}/my/{self._org_nick}/view/vacancy/{vac_id}")
@@ -78,12 +81,15 @@ class HuntFlowParser:
                 ec.presence_of_element_located((By.CLASS_NAME, "root--z7B1B"))
             )
         except TimeoutException:
-            logging.error(f"vacancy {vac_id} not found or page don't loading")
+            logger.error(f"vacancy {vac_id} not found or page don't loading")
             return None
         status_elem = self.driver.find_element(By.CLASS_NAME, "root--z7B1B")
         html_text = status_elem.get_attribute("innerHTML")
-        vac_info = get_info_vacancy(html_text)
-        return vac_info
+        if html_text:
+            vac_info = get_info_vacancy(html_text)
+            return vac_info
+        logger.error("Dont get applicants status")
+        return None
 
     def logout(self) -> None:
         WebDriverWait(driver=self.driver, timeout=TIME_OUT_LOADING_PAGE).until(
@@ -100,4 +106,4 @@ class HuntFlowParser:
             ec.presence_of_element_located((By.XPATH, '//a[@href="/account/login"]'))
         )
         self.driver.quit()
-        logging.info("Logout from HuntFLow. Goodbye!!!")
+        logger.info("Logout from HuntFLow. Goodbye!!!")

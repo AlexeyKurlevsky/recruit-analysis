@@ -115,6 +115,7 @@ class HuntHandler:
             stmt = insert(Coworkers).values(id=res["id"], name=res["name"], type=res["type"])
             with Session(engine) as session:
                 session.execute(stmt)
+                session.commit()
         except Exception as ex:
             logger.error(ex)
 
@@ -130,7 +131,7 @@ class HuntHandler:
             arr_vac += resp["items"]
         return arr_vac
 
-    def get_log_vacancy(self, vacancy_id, date_begin):
+    def get_log_vacancy(self, vacancy_id: int, date_begin: str) -> dict | None:
         path = f"/accounts/{self._org_id}/vacancies/{vacancy_id}/logs"
         date_now = datetime.now().strftime("%Y-%m-%dT%H:%M:%S+03:00")
         params = {"date_begin": date_begin, "date_end": date_now}
@@ -150,7 +151,7 @@ class HuntHandler:
 
         return log
 
-    def check_reason_close(self, vacancy_id):
+    def check_reason_close(self, vacancy_id: int):
         path = f"/accounts/{self._org_id}/vacancies/{vacancy_id}/frame"
         flg = False
         try:
@@ -162,3 +163,16 @@ class HuntHandler:
             logger.error(ex)
 
         return flg
+
+    def get_vacancy_data(self, vacancy_id: int) -> dict | None:
+        path = f"/accounts/{self._org_id}/vacancies/{vacancy_id}"
+        try:
+            resp = asyncio.run(self.client.request(method="GET", path=path))
+            logger.debug(f"Response code from data vacancy {resp.status_code}")
+            res = json.loads(resp.text)
+        except Exception as ex:
+            logger.error(f"Dont get data vacancy of {vacancy_id}")
+            logger.error(ex)
+            res = None
+
+        return res
