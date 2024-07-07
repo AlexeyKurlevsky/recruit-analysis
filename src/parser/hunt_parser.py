@@ -4,13 +4,7 @@ from functools import cached_property
 from bs4 import BeautifulSoup
 from requests import Session
 
-from src.config import (
-    HUNTFLOW_ACCESS_TOKEN,
-    HUNTFLOW_PASSWORD,
-    HUNTFLOW_URL,
-    HUNTFLOW_URL_API,
-    HUNTFLOW_USERNAME,
-)
+from src.config import HUNTFLOW_ACCESS_TOKEN, HUNTFLOW_PASSWORD, HUNTFLOW_URL, HUNTFLOW_URL_API, HUNTFLOW_USERNAME
 from src.handler.hunt_handler import HuntHandler
 from src.parser.func import get_info_vacancy
 

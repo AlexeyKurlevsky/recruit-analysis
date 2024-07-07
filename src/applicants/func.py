@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from sqlalchemy import insert, update
 from sqlalchemy.orm import Session
 
@@ -38,7 +40,11 @@ def update_info_applicant_on_vacancies(db_id: int, status_id: int, value: int) -
     """
     Обновление записи со статистикой по вакансии
     """
-    stmt = update(VacStatInfo).where(VacStatInfo.id == db_id, VacStatInfo.status_id == status_id).values(value=value)
+    stmt = (
+        update(VacStatInfo)
+        .where(VacStatInfo.id == db_id, VacStatInfo.status_id == status_id)
+        .values(value=value, date=datetime.now())
+    )
     with Session(engine) as session:
         session.execute(stmt)
         session.commit()
