@@ -15,7 +15,7 @@ with DAG(
     dag_id="update_vacancies",
     catchup=False,
     start_date=datetime.datetime(2024, 1, 27),
-    schedule="50 * * * *",
+    schedule="* 3,6,9,12,15,18,21 * * *",
     max_active_runs=1,
     default_args=default_args,
 ) as dag:
