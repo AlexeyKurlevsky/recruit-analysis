@@ -83,6 +83,10 @@ class HuntFlowParser:
             # может понадобится
             if status_id == "total":
                 continue
+            status_name = status_serialize.get(status_id)
+            if status_name is None:
+                logger.error(f"Не нашел информации по статусу {status_id}")
+                continue
             ans[status_id] = (status_serialize[status_id], value)
 
         return ans
