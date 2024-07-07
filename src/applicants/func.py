@@ -6,23 +6,19 @@ from src.db.queries import get_status_applicant
 from src.db.tables import ApplicantsStatus, VacStatInfo
 
 
-def check_status_applicants(status_name: str) -> int:
+def check_status_applicants(status_id: str, status_name: str) -> None:
     """
     Получить идентификатор статуса кандидата
     Если идентификатора нет, то вставляем новую запись со статусом
     :param status_name: название статуса
     :return:
     """
-    applicant_status_arr = get_status_applicant(status_name)
+    applicant_status_arr = get_status_applicant(status_id)
     if not applicant_status_arr:
-        stmt = insert(ApplicantsStatus).values(name=status_name)
+        stmt = insert(ApplicantsStatus).values(id=status_id, name=status_name)
         with Session(engine) as session:
-            result = session.execute(stmt)
+            session.execute(stmt)
             session.commit()
-            key = result.inserted_primary_key
-        return key[0]
-    
-    return applicant_status_arr[0]
 
 
 def insert_info_applicant_on_vacancies(vac_id: int, status_id: int, value: int) -> None:

@@ -30,12 +30,12 @@ def get_all_vacancies_id() -> list:
     return res
 
 
-def get_status_applicant(name: str) -> list[ApplicantsStatus.id]:
+def get_status_applicant(status_id: str) -> list[ApplicantsStatus]:
     """
     Получить имена статусов кандидатов на вакансию
     :return:
     """
-    stmt = select(ApplicantsStatus.id).where(ApplicantsStatus.name == name)
+    stmt = select(ApplicantsStatus).where(ApplicantsStatus.id == status_id)
     with Session(engine) as session:
         res = session.execute(stmt).scalars().all()
     return res
@@ -98,7 +98,7 @@ def get_vacancy_besides_state(state: list) -> list[AllVacancies]:
     return res
 
 
-def check_vac_in_statistic(vac_id: int, status_id: int) -> list[VacStatInfo]:
+def check_vac_in_statistic(vac_id: int, status_id: str) -> list[VacStatInfo]:
     """
     Проверить есть ли запись по определенному статутусу для вакансии
     :param vac_id:

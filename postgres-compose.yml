@@ -48,18 +48,6 @@ services:
     networks:
       - my_network
 
-  selenium:
-    container_name: remote_chromedriver
-    image: seleniarm/standalone-chromium:121.0
-    environment:
-      - SE_OPTS=--session-timeout 3600
-      - SE_VNC_NO_PASSWORD=true
-    expose:
-      - 4444
-    restart: always
-    networks:
-      - my_network
-
 networks:
   my_network:
     driver: bridge
