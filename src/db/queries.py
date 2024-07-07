@@ -106,12 +106,13 @@ def check_vac_in_statistic(vac_id: int, status_id: str) -> list[VacStatInfo]:
     :return: True - нужно вставить запись, False - пропустить вакансию
     """
     stmt = (
-        select(VacStatInfo.id, VacStatInfo.vac_id, func.max(VacStatInfo.date))
-        .where(VacStatInfo.vac_id == vac_id and VacStatInfo.status_id == status_id)
-        .group_by(VacStatInfo.id, VacStatInfo.vac_id)
+        select(VacStatInfo)
+        .where(VacStatInfo.vac_id == vac_id and VacStatInfo.status_id == int(status_id))
+        .order_by(VacStatInfo.date.desc())
+        .limit(1)
     )
     with Session(engine) as session:
-        res = session.execute(stmt).all()
+        res = session.execute(stmt).scalars().all()
 
     return res
 
