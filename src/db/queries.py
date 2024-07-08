@@ -30,7 +30,7 @@ def get_all_vacancies_id() -> list:
     return res
 
 
-def get_status_applicant(status_id: str) -> list[ApplicantsStatus]:
+def get_status_applicant(status_id: int) -> list[ApplicantsStatus]:
     """
     Получить имена статусов кандидатов на вакансию
     :return:
@@ -98,7 +98,7 @@ def get_vacancy_besides_state(state: list) -> list[AllVacancies]:
     return res
 
 
-def check_vac_in_statistic(vac_id: int, status_id: str) -> list[VacStatInfo]:
+def get_last_vacancy_statistic_with_status(vac_id: int, status_id: int) -> list[VacStatInfo]:
     """
     Проверить есть ли запись по определенному статутусу для вакансии
     :param vac_id:
@@ -106,7 +106,7 @@ def check_vac_in_statistic(vac_id: int, status_id: str) -> list[VacStatInfo]:
     """
     stmt = (
         select(VacStatInfo)
-        .where(VacStatInfo.vac_id == vac_id and VacStatInfo.status_id == int(status_id))
+        .where((VacStatInfo.vac_id == vac_id) & (VacStatInfo.status_id == status_id))
         .order_by(VacStatInfo.date.desc())
         .limit(1)
     )

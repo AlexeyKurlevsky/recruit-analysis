@@ -8,7 +8,7 @@ from src.db.queries import get_status_applicant
 from src.db.tables import ApplicantsStatus, VacStatInfo
 
 
-def check_status_applicants(status_id: str, status_name: str) -> None:
+def check_status_applicants(status_id: int, status_name: str) -> None:
     """
     Получить идентификатор статуса кандидата
     Если идентификатора нет, то вставляем новую запись со статусом
@@ -30,7 +30,7 @@ def insert_info_applicant_on_vacancies(vac_id: int, status_id: int, value: int) 
     :param vac_info: информация со статусами вакансии
     :return:
     """
-    stmt = insert(VacStatInfo).values(vac_id=vac_id, status_id=status_id, value=value)
+    stmt = insert(VacStatInfo).values(vac_id=vac_id, status_id=status_id, value=value, date=datetime.now().date())
     with Session(engine) as session:
         session.execute(stmt)
         session.commit()
@@ -40,11 +40,7 @@ def update_info_applicant_on_vacancies(db_id: int, status_id: int, value: int) -
     """
     Обновление записи со статистикой по вакансии
     """
-    stmt = (
-        update(VacStatInfo)
-        .where(VacStatInfo.id == db_id, VacStatInfo.status_id == status_id)
-        .values(value=value, date=datetime.now())
-    )
+    stmt = update(VacStatInfo).where(VacStatInfo.id == db_id, VacStatInfo.status_id == status_id).values(value=value)
     with Session(engine) as session:
         session.execute(stmt)
         session.commit()
