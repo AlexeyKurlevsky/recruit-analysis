@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from sqlalchemy import ARRAY, Boolean, Column, DateTime, ForeignKey, Integer, String
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import declarative_base
 
 from src.config import engine
 
@@ -57,7 +57,21 @@ class VacStatInfo(Base):
         comment="Applicant status id",
     )
     value = Column(Integer, comment="value of applicants by status")
-    date = Column(DateTime(), default=datetime.now(), comment="Date when registrate status")
+    date = Column(DateTime(), default=datetime.now().date(), comment="Date when registrate status")
+
+
+class CurrentApplicantValueByStatus(Base):
+    __tablename__ = "current_applicant_value_by_status"
+    id = Column(Integer, primary_key=True)
+    vac_id = Column(Integer, ForeignKey("all_vacancies.id"), comment="Vacancy id", nullable=False)
+    status_id = Column(
+        Integer,
+        ForeignKey("applicants_status.id"),
+        nullable=False,
+        comment="Applicant status id",
+    )
+    value = Column(Integer, comment="current value of applicants by status")
+    date = Column(DateTime(), default=datetime.now().date(), comment="Date when registrate status")
 
 
 class NewVacancies(Base):

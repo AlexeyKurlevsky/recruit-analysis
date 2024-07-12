@@ -20,10 +20,10 @@ from src.vacancies.vacancy_tasks import get_new_vacancies
 def test_login():
     parser = HuntFlowParser()
     vacancy = AllVacancies()
-    vacancy.id = 3700192
+    vacancy.id = 3594555
     vacancy.position = "test_position"
     statistic = parser.get_vacancy_stat_info(vacancy.id)
-    if statistic is None:
+    if not statistic:
         raise ValueError("Не смог получить информацию по статистике вакансии")
     handle_vacancy_with_status(applicant_info=statistic, vacancy=vacancy)
     parser.logout()
