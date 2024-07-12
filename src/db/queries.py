@@ -1,11 +1,17 @@
 import logging
-from datetime import datetime
 
-from sqlalchemy import delete, func, insert, select
+from sqlalchemy import delete, insert, select
 from sqlalchemy.orm import Session
 
 from src.config import engine
-from src.db.tables import AllVacancies, ApplicantsStatus, Coworkers, NewVacancies, VacStatInfo
+from src.db.tables import (
+    AllVacancies,
+    ApplicantsStatus,
+    Coworkers,
+    CurrentApplicantValueByStatus,
+    NewVacancies,
+    VacStatInfo,
+)
 
 
 def get_all_coworkers_id() -> list:
@@ -98,26 +104,21 @@ def get_vacancy_besides_state(state: list) -> list[AllVacancies]:
     return res
 
 
-def get_last_vacancy_statistic_with_status(vac_id: int, status_id: int) -> list[VacStatInfo]:
+def get_last_vacancy_statistic_with_status(
+    vac_id: int, status_id: int, table: VacStatInfo | CurrentApplicantValueByStatus
+) -> list[VacStatInfo | CurrentApplicantValueByStatus]:
     """
     Проверить есть ли запись по определенному статутусу для вакансии
     :param vac_id:
     :return: True - нужно вставить запись, False - пропустить вакансию
     """
     stmt = (
-        select(VacStatInfo)
-        .where((VacStatInfo.vac_id == vac_id) & (VacStatInfo.status_id == status_id))
-        .order_by(VacStatInfo.date.desc())
+        select(table)
+        .where((table.vac_id == vac_id) & (table.status_id == status_id))
+        .order_by(table.date.desc())
         .limit(1)
     )
     with Session(engine) as session:
         res = session.execute(stmt).scalars().all()
 
-    return res
-
-
-def get_id_status_applicant(vac_id: int) -> list:
-    stmt = select(VacStatInfo.status_id).where(VacStatInfo.vac_id == vac_id)
-    with Session(engine) as session:
-        res = session.execute(stmt).scalars().all()
     return res
