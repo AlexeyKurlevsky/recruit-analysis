@@ -15,7 +15,7 @@ with DAG(
     dag_id="statistic_applicant",
     catchup=False,
     start_date=datetime.datetime(2024, 1, 27),
-    schedule="* 2,4,7,9,11,13,15,17,19,21 * * *",
+    schedule="* 2,7,10,19,21 * * *",
     max_active_runs=1,
     default_args=default_args,
 ) as dag:
