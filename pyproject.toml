@@ -1,0 +1,23 @@
+[tool.poetry]
+name = "analytic-dhr"
+version = "0.1.0"
+description = "Analytic for recruitment"
+authors = ["AlexeyKurlevsky <kurlevsky@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "3.10.13"
+apache-airflow = "2.8.1"
+huntflow-api-client = "2.0.1"
+python-dotenv = "1.0.1"
+psycopg2-binary = "2.9.9"
+beautifulsoup4 = "4.12.3"
+pytest = "8.2.1"
+isort = "^5.13.2"
+black = "^24.4.2"
+pylint = "^3.2.5"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
