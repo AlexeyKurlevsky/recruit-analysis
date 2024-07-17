@@ -12,6 +12,7 @@ from src.parser.func import get_info_vacancy
 
 
 STATUS_NAME_IN_WORK = "workon"
+DB_ID_IN_WORK = 1
 STATUS_NAME_RESPONSE = "response"
 
 logger = logging.getLogger()
@@ -109,9 +110,12 @@ class HuntFlowParser:
             raise ValueError(text)
         statistics = response.json()
         ans = [
-            ApplicantStatistic(status_id=status["status"], value=status["current"])
+            ApplicantStatistic(
+                status_id=status["status"] if status["status"] != STATUS_NAME_IN_WORK else DB_ID_IN_WORK,
+                value=status["current"],
+            )
             for status in statistics["items"]
-            if status["status"] not in [STATUS_NAME_IN_WORK, STATUS_NAME_RESPONSE]
+            if status["status"] not in [STATUS_NAME_RESPONSE]
         ]
         return ans
 
@@ -122,6 +126,9 @@ class HuntFlowParser:
         current_value_by_status = self.get_current_applicant_status_value(vac_id)
 
         status_serialize = {status.status_id: status.status_name for status in statuses}
+        # TODO: выглядит очень костыльно, но не придумал лучшего быстрого решения
+        # Либо делать миграцию БД и делать в таблице applicants_status несколько столбцов
+        status_serialize[DB_ID_IN_WORK] = "В работе"
         common_value_serialize = {status.status_id: status.value for status in common_value_by_status}
         current_value_serialize = {status.status_id: status.value for status in current_value_by_status}
 

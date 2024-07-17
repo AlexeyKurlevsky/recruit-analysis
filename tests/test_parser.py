@@ -20,7 +20,7 @@ from src.vacancies.vacancy_tasks import get_new_vacancies
 def test_login():
     parser = HuntFlowParser()
     vacancy = AllVacancies()
-    vacancy.id = 3594555
+    vacancy.id = 3718253
     vacancy.position = "test_position"
     statistic = parser.get_vacancy_stat_info(vacancy.id)
     if not statistic:
