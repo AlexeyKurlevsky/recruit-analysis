@@ -1,10 +1,10 @@
 from datetime import datetime
 
 from sqlalchemy import ARRAY, Boolean, Column, DateTime, ForeignKey, Integer, String
-from sqlalchemy.orm import declarative_base
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
 
 from src.config import engine
-
 
 Base = declarative_base()
 
@@ -12,10 +12,11 @@ Base = declarative_base()
 class Coworkers(Base):
     __tablename__ = "coworkers"
     id = Column(Integer, primary_key=True)
-    # TODO: запрос get a coworker не ищет по id из get all coworkes
+    # TODO: Fix get a coworker query
     # member = Column(Integer, comment="User ID", nullable=False)
     name = Column(String(100), comment="Coworker name")
     type = Column(String(100), comment="Coworker type (role)")
+    is_active = Column(Boolean, default=True, comment="Flag indicating coworker activity")
 
 
 class AllVacancies(Base):
@@ -92,5 +93,25 @@ class NewVacancies(Base):
     parent = Column(Boolean, comment="Flag indicating if this vacancy is a multiple")
     account_vacancy_status_group = Column(Integer, comment="Recruitment status group ID")
 
+def toggle_coworker_activity(coworker_id):
+    """Переключает статус активности сотрудника по ID."""
+    with engine.connect() as conn:
+        result = conn.execute(
+            "SELECT is_active FROM coworkers WHERE id = :coworker_id",
+            {"coworker_id": coworker_id}
+        )
+        row = result.fetchone()
+        if row is None:
+            raise ValueError(f"No coworker found with ID {coworker_id}")
+
+        current_status = row[0]
+        new_status = not current_status
+
+        conn.execute(
+            "UPDATE coworkers SET is_active = :new_status WHERE id = :coworker_id",
+            {"new_status": new_status, "coworker_id": coworker_id},
+        )
 
 Base.metadata.create_all(engine)
+
+
